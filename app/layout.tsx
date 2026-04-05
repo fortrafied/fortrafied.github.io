@@ -5,11 +5,11 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Fortrafied | DLP Security Testing Suite',
+    default: 'Fortrafied | Security Testing Suite',
     template: '%s | Fortrafied',
   },
   description:
-    "Test your DLP solution's effectiveness with HTTP/HTTPS POST tests, file uploads, sample data downloads, regex pattern testing, and more.",
+    "Test your security solution's effectiveness with HTTP/HTTPS POST tests, file uploads, sample data downloads, regex pattern testing, and more.",
 };
 
 export default function RootLayout({
