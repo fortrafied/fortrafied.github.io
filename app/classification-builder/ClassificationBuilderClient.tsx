@@ -152,7 +152,7 @@ export default function ClassificationBuilderClient() {
     <>
       <div className="info-box">
         <strong>Custom classifiers are saved in your browser&apos;s localStorage</strong> and automatically loaded by the{' '}
-        <Link href="/data-classifier">Data Classifier</Link>. You can also export/import schemas as JSON to share them.
+        <Link href="/data-classifier">Classification Tester</Link>. You can also export/import schemas as JSON to share them.
       </div>
 
       {/* Editor panel */}
@@ -434,7 +434,7 @@ export default function ClassificationBuilderClient() {
             <h4>Classify Data</h4>
             <p>
               Your custom classifiers are automatically available in the{' '}
-              <Link href="/data-classifier">Data Classifier</Link>
+              <Link href="/data-classifier">Classification Tester</Link>
               , running alongside the built-in detection rules.
             </p>
           </div>

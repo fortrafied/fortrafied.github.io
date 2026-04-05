@@ -86,7 +86,7 @@ export default function Home() {
             </div>
             <div className="card">
               <div className="card-icon">&#128270;</div>
-              <h3>Data Classifier</h3>
+              <h3>Classification Tester</h3>
               <p>
                 Paste text and automatically identify sensitive data types
                 present &mdash; PII, PCI, PHI, credentials, and custom patterns.
@@ -102,30 +102,6 @@ export default function Home() {
               <p>
                 Toggle data protection products and features to see live coverage
                 across channels and data types.
-              </p>
-              <span className="btn btn-outline btn-disabled">Coming Soon</span>
-            </div>
-            <div className="card card-disabled">
-              <div className="card-icon">&#128196;</div>
-              <h3>
-                Policy Generator{' '}
-                <span className="coming-soon-badge">Coming Soon</span>
-              </h3>
-              <p>
-                Generate DLP policy configurations for common platforms including
-                Microsoft Purview, Symantec, Forcepoint, and more.
-              </p>
-              <span className="btn btn-outline btn-disabled">Coming Soon</span>
-            </div>
-            <div className="card card-disabled">
-              <div className="card-icon">&#128221;</div>
-              <h3>
-                Policy Builder{' '}
-                <span className="coming-soon-badge">Coming Soon</span>
-              </h3>
-              <p>
-                Build and interpret DLP policies for Digital Guardian, DCS Policy
-                Manager, Titus, and generic formats.
               </p>
               <span className="btn btn-outline btn-disabled">Coming Soon</span>
             </div>

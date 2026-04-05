@@ -27,7 +27,7 @@ export default function Footer() {
             <ul>
               <li><Link href="/sample-data">Sample Data</Link></li>
               <li><Link href="/regex-tester">Regex Tester</Link></li>
-              <li><Link href="/data-classifier">Data Classifier</Link></li>
+              <li><Link href="/data-classifier">Classification Tester</Link></li>
               <li><Link href="/hash-generator">File Hash Generator</Link></li>
               <li><Link href="/faq">FAQ</Link></li>
             </ul>

@@ -36,11 +36,9 @@ const dropdowns: NavDropdown[] = [
     label: 'Tools',
     items: [
       { label: 'Regex Pattern Tester', href: '/regex-tester' },
-      { label: 'Data Classifier', href: '/data-classifier' },
+      { label: 'Classification Tester', href: '/data-classifier' },
       { label: 'Classification Builder', href: '/classification-builder' },
       { label: 'DP Solution Composer', href: '/dp-solution' },
-      { label: 'Policy Generator', href: '/policy-generator' },
-      { label: 'Policy Builder', href: '/policy-builder' },
       { label: 'DLP Prompt Builder', href: '/prompt-builder' },
       { label: 'File Hash Generator', href: '/hash-generator' },
     ],

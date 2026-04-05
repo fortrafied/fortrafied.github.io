@@ -9,7 +9,7 @@ export default function ClassificationBuilderPage() {
     <>
       <PageHeader
         title="Classification Builder"
-        description="Create custom classification schemas using regex patterns and keyword dictionaries. Schemas are saved locally and used by the Data Classifier."
+        description="Create custom classification schemas using regex patterns and keyword dictionaries. Schemas are saved locally and used by the Classification Tester."
       />
       <main className="container section">
         <ClassificationBuilderClient />

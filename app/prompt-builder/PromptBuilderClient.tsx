@@ -30,6 +30,7 @@ export default function PromptBuilderClient() {
   const [platform, setPlatform] = useState<Platform>('endpoint');
   const [components, setComponents] = useState(defaultComponents);
   const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewTab, setPreviewTab] = useState<'visual' | 'source'>('visual');
 
   const filteredComponents = components.filter((c) => c.platforms.includes(platform));
   const enabledComponents = filteredComponents.filter((c) => c.enabled);
@@ -192,12 +193,44 @@ export default function PromptBuilderClient() {
                 Close
               </button>
             </div>
-            <div
-              className="code-block"
-              style={{ maxHeight: 500, overflowY: 'auto', whiteSpace: 'pre-wrap', fontSize: '0.8rem' }}
-            >
-              {generatePromptHtml()}
+
+            <div className="tabs" style={{ marginBottom: 0 }}>
+              <button
+                className={`tab-btn${previewTab === 'visual' ? ' active' : ''}`}
+                onClick={() => setPreviewTab('visual')}
+              >
+                Visual
+              </button>
+              <button
+                className={`tab-btn${previewTab === 'source' ? ' active' : ''}`}
+                onClick={() => setPreviewTab('source')}
+              >
+                Source
+              </button>
             </div>
+
+            {previewTab === 'visual' ? (
+              <div style={{ border: '1px solid #1e2a45', borderRadius: '0 0 8px 8px', overflow: 'hidden' }}>
+                <iframe
+                  srcDoc={generatePromptHtml()}
+                  title="Prompt Preview"
+                  sandbox=""
+                  style={{
+                    width: '100%',
+                    height: 500,
+                    border: 'none',
+                    background: '#fff',
+                  }}
+                />
+              </div>
+            ) : (
+              <div
+                className="code-block"
+                style={{ maxHeight: 500, overflowY: 'auto', whiteSpace: 'pre-wrap', fontSize: '0.8rem', borderRadius: '0 0 8px 8px' }}
+              >
+                {generatePromptHtml()}
+              </div>
+            )}
           </div>
         )}
       </div>
