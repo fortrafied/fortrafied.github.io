@@ -30,11 +30,19 @@ export interface HeaderEntry {
   value: string;
 }
 
+export interface SecurityHeader {
+  name: string;
+  value: string;
+  vendor: string;
+  category: 'spam' | 'antivirus' | 'phishing' | 'encryption' | 'policy' | 'reputation' | 'routing' | 'other';
+}
+
 export interface ParsedEmail {
   headers: HeaderEntry[];
   hops: EmailHop[];
   authResults: AuthResult[];
   classificationHeaders: ClassificationHeader[];
+  securityHeaders: SecurityHeader[];
   summary: EmailSummary;
   body: string;
 }
@@ -63,38 +71,166 @@ export interface EmailSummary {
 const EMAIL_CLASSIFICATION_PATTERNS: { pattern: RegExp; product: string }[] = [
   // Microsoft Purview / MIP / AIP
   { pattern: /^msip[_-]label/i, product: 'Microsoft Purview / MIP' },
-  { pattern: /^x-ms-exchange-organization-authas/i, product: 'Microsoft Exchange' },
-  { pattern: /^x-ms-exchange-organization-authsource/i, product: 'Microsoft Exchange' },
-  { pattern: /^x-ms-exchange-organization-scl/i, product: 'Microsoft Exchange (SCL)' },
-  { pattern: /^x-ms-exchange-organization-messagedirectionalityy/i, product: 'Microsoft Exchange' },
-  { pattern: /^x-ms-has-attach/i, product: 'Microsoft Exchange' },
-  { pattern: /^x-ms-tnef-correlator/i, product: 'Microsoft Exchange' },
-  { pattern: /^sensitivity/i, product: 'RFC Sensitivity' },
-  // Titus
+  { pattern: /^sensitivity$/i, product: 'RFC Sensitivity' },
+  // Titus (Fortra)
   { pattern: /^x-titus/i, product: 'Titus Classification' },
-  { pattern: /^x-.*titus/i, product: 'Titus Classification' },
   // Boldon James
   { pattern: /^x-boldonjames/i, product: 'Boldon James Classifier' },
   { pattern: /^x-bj-/i, product: 'Boldon James Classifier' },
-  // Fortra / Digital Guardian
+  { pattern: /^x-bjsfc/i, product: 'Boldon James Classifier' },
+  // Fortra Digital Guardian
   { pattern: /^x-dg-/i, product: 'Fortra Digital Guardian' },
   { pattern: /^x-digitalguardian/i, product: 'Fortra Digital Guardian' },
-  // Forcepoint
-  { pattern: /^x-forcepoint/i, product: 'Forcepoint' },
-  // Proofpoint
-  { pattern: /^x-proofpoint/i, product: 'Proofpoint' },
-  // Mimecast
-  { pattern: /^x-mimecast/i, product: 'Mimecast' },
-  // Barracuda
-  { pattern: /^x-barracuda/i, product: 'Barracuda' },
-  // Generic classification
-  { pattern: /^x-classification/i, product: 'Generic Classification' },
-  { pattern: /^x-protective-marking/i, product: 'Protective Marking' },
-  { pattern: /^x-label/i, product: 'Generic Label' },
   // Janusseal
   { pattern: /^x-janusseal/i, product: 'Janusseal' },
   // Workshare
   { pattern: /^x-workshare/i, product: 'Workshare' },
+  // Generic classification
+  { pattern: /^x-classification$/i, product: 'Generic Classification' },
+  { pattern: /^x-protective-marking/i, product: 'Protective Marking' },
+  { pattern: /^x-label$/i, product: 'Generic Label' },
+];
+
+// ── Security / SEG header patterns ─────────────────────────────────────────
+
+type SecurityCategory = SecurityHeader['category'];
+
+const SECURITY_HEADER_PATTERNS: { pattern: RegExp; vendor: string; category: SecurityCategory }[] = [
+  // ── Fortra Products ──
+  // Agari (DMARC/BEC protection)
+  { pattern: /^x-agari/i, vendor: 'Fortra Agari', category: 'phishing' },
+  // Clearswift SEG
+  { pattern: /^x-seg-/i, vendor: 'Fortra Clearswift SEG', category: 'spam' },
+  { pattern: /^x-msw-jemd-malware/i, vendor: 'Fortra Clearswift SEG', category: 'antivirus' },
+  { pattern: /^x-msw-jemd-mailshell-spam/i, vendor: 'Fortra Clearswift SEG', category: 'spam' },
+  { pattern: /^x-msw-jemd-rspamd-spam/i, vendor: 'Fortra Clearswift SEG', category: 'spam' },
+  { pattern: /^x-msw-jemd/i, vendor: 'Fortra Clearswift SEG', category: 'other' },
+
+  // ── Microsoft Exchange / Defender for Office 365 ──
+  { pattern: /^x-forefront-antispam-report/i, vendor: 'Microsoft Forefront', category: 'spam' },
+  { pattern: /^x-microsoft-antispam-mailbox-delivery/i, vendor: 'Microsoft Defender', category: 'spam' },
+  { pattern: /^x-microsoft-antispam-message-info/i, vendor: 'Microsoft Defender', category: 'spam' },
+  { pattern: /^x-microsoft-antispam$/i, vendor: 'Microsoft Defender', category: 'spam' },
+  { pattern: /^x-ms-exchange-organization-scl/i, vendor: 'Microsoft Exchange', category: 'spam' },
+  { pattern: /^x-ms-exchange-organization-pcl/i, vendor: 'Microsoft Exchange', category: 'phishing' },
+  { pattern: /^x-ms-exchange-organization-auth/i, vendor: 'Microsoft Exchange', category: 'policy' },
+  { pattern: /^x-ms-exchange-crosstenant/i, vendor: 'Microsoft Exchange', category: 'routing' },
+  { pattern: /^x-ms-exchange-organization/i, vendor: 'Microsoft Exchange', category: 'policy' },
+  { pattern: /^x-ms-exchange-transport/i, vendor: 'Microsoft Exchange', category: 'routing' },
+  { pattern: /^x-ms-exchange-messagesentrepresentingtype/i, vendor: 'Microsoft Exchange', category: 'policy' },
+  { pattern: /^x-ms-has-attach/i, vendor: 'Microsoft Exchange', category: 'policy' },
+  { pattern: /^x-ms-tnef-correlator/i, vendor: 'Microsoft Exchange', category: 'other' },
+  { pattern: /^x-originatororg/i, vendor: 'Microsoft Exchange', category: 'routing' },
+
+  // ── Google Workspace / Gmail ──
+  { pattern: /^x-google-dkim-signature/i, vendor: 'Google', category: 'other' },
+  { pattern: /^x-google-smtp-source/i, vendor: 'Google', category: 'routing' },
+  { pattern: /^x-gm-message-state/i, vendor: 'Google', category: 'other' },
+  { pattern: /^x-google-original-from/i, vendor: 'Google', category: 'routing' },
+
+  // ── Proofpoint ──
+  { pattern: /^x-proofpoint-spam-details/i, vendor: 'Proofpoint', category: 'spam' },
+  { pattern: /^x-proofpoint-virus-version/i, vendor: 'Proofpoint', category: 'antivirus' },
+  { pattern: /^x-proofpoint-orig-id/i, vendor: 'Proofpoint', category: 'routing' },
+  { pattern: /^x-proofpointencryptdesktop/i, vendor: 'Proofpoint', category: 'encryption' },
+  { pattern: /^x-proofpoint/i, vendor: 'Proofpoint', category: 'other' },
+  { pattern: /^x-threatsim/i, vendor: 'Proofpoint ThreatSim', category: 'phishing' },
+
+  // ── Mimecast ──
+  { pattern: /^x-mimecast-bulk-signature/i, vendor: 'Mimecast', category: 'spam' },
+  { pattern: /^x-mimecast-spam-score/i, vendor: 'Mimecast', category: 'spam' },
+  { pattern: /^x-mimecast-impersonation-protect/i, vendor: 'Mimecast', category: 'phishing' },
+  { pattern: /^x-mimecast/i, vendor: 'Mimecast', category: 'other' },
+
+  // ── Barracuda ──
+  { pattern: /^x-barracuda-spam-flag/i, vendor: 'Barracuda', category: 'spam' },
+  { pattern: /^x-barracuda-spam-score/i, vendor: 'Barracuda', category: 'spam' },
+  { pattern: /^x-barracuda-spam-status/i, vendor: 'Barracuda', category: 'spam' },
+  { pattern: /^x-barracuda-spam-report/i, vendor: 'Barracuda', category: 'spam' },
+  { pattern: /^x-barracuda-envelope-from/i, vendor: 'Barracuda', category: 'routing' },
+  { pattern: /^x-barracuda-bayes/i, vendor: 'Barracuda', category: 'spam' },
+  { pattern: /^x-barracuda-virus-scanned/i, vendor: 'Barracuda', category: 'antivirus' },
+  { pattern: /^x-barracuda/i, vendor: 'Barracuda', category: 'other' },
+
+  // ── Cisco IronPort / ESA ──
+  { pattern: /^x-ironport-anti-spam-filtered/i, vendor: 'Cisco IronPort', category: 'spam' },
+  { pattern: /^x-ironport-anti-spam-result/i, vendor: 'Cisco IronPort', category: 'spam' },
+  { pattern: /^x-ironport-av/i, vendor: 'Cisco IronPort', category: 'antivirus' },
+  { pattern: /^x-ironport-sdr/i, vendor: 'Cisco IronPort', category: 'reputation' },
+  { pattern: /^x-ironport/i, vendor: 'Cisco IronPort', category: 'other' },
+  { pattern: /^x-ipas-result/i, vendor: 'Cisco IronPort', category: 'spam' },
+  { pattern: /^x-sbrs/i, vendor: 'Cisco SenderBase', category: 'reputation' },
+
+  // ── Sophos ──
+  { pattern: /^x-sophos/i, vendor: 'Sophos', category: 'other' },
+  { pattern: /^x-lased/i, vendor: 'Sophos', category: 'spam' },
+
+  // ── SpamAssassin ──
+  { pattern: /^x-spam-status/i, vendor: 'SpamAssassin', category: 'spam' },
+  { pattern: /^x-spam-score/i, vendor: 'SpamAssassin', category: 'spam' },
+  { pattern: /^x-spam-flag/i, vendor: 'SpamAssassin', category: 'spam' },
+  { pattern: /^x-spam-level/i, vendor: 'SpamAssassin', category: 'spam' },
+  { pattern: /^x-spam-report/i, vendor: 'SpamAssassin', category: 'spam' },
+  { pattern: /^x-spam-checker-version/i, vendor: 'SpamAssassin', category: 'other' },
+
+  // ── Symantec / Broadcom Brightmail ──
+  { pattern: /^x-brightmail-tracker/i, vendor: 'Symantec Brightmail', category: 'routing' },
+  { pattern: /^x-brightmail/i, vendor: 'Symantec Brightmail', category: 'spam' },
+  { pattern: /^x-porninfo/i, vendor: 'Symantec Brightmail', category: 'spam' },
+  { pattern: /^x-msg-ref/i, vendor: 'Symantec Brightmail', category: 'routing' },
+
+  // ── Trend Micro ──
+  { pattern: /^x-tmase-result/i, vendor: 'Trend Micro', category: 'spam' },
+  { pattern: /^x-tm-as-result/i, vendor: 'Trend Micro', category: 'spam' },
+  { pattern: /^x-tm-as-url/i, vendor: 'Trend Micro', category: 'reputation' },
+  { pattern: /^x-tm-received-spf/i, vendor: 'Trend Micro', category: 'other' },
+  { pattern: /^x-tm-/i, vendor: 'Trend Micro', category: 'other' },
+  { pattern: /^x-tmase/i, vendor: 'Trend Micro', category: 'other' },
+
+  // ── FireEye / Trellix ──
+  { pattern: /^x-fireeye/i, vendor: 'Trellix (FireEye)', category: 'other' },
+  { pattern: /^x-fe-/i, vendor: 'Trellix (FireEye)', category: 'other' },
+
+  // ── Fortinet FortiMail ──
+  { pattern: /^x-feas-system-wl/i, vendor: 'Fortinet FortiMail', category: 'policy' },
+  { pattern: /^x-feas-spam-outbreak/i, vendor: 'Fortinet FortiMail', category: 'spam' },
+  { pattern: /^x-feas-bannedword/i, vendor: 'Fortinet FortiMail', category: 'policy' },
+  { pattern: /^x-feas-dictionary/i, vendor: 'Fortinet FortiMail', category: 'policy' },
+  { pattern: /^x-feas/i, vendor: 'Fortinet FortiMail', category: 'other' },
+  { pattern: /^x-fortimail/i, vendor: 'Fortinet FortiMail', category: 'other' },
+
+  // ── Rspamd ──
+  { pattern: /^x-spamd-result/i, vendor: 'Rspamd', category: 'spam' },
+  { pattern: /^x-spamd-bar/i, vendor: 'Rspamd', category: 'spam' },
+  { pattern: /^x-rspamd-server/i, vendor: 'Rspamd', category: 'routing' },
+  { pattern: /^x-rspamd-queue-id/i, vendor: 'Rspamd', category: 'routing' },
+  { pattern: /^x-rspamd/i, vendor: 'Rspamd', category: 'other' },
+
+  // ── ClamAV / Amavis ──
+  { pattern: /^x-virus-scanned/i, vendor: 'ClamAV / Amavis', category: 'antivirus' },
+  { pattern: /^x-virus-status/i, vendor: 'ClamAV / Amavis', category: 'antivirus' },
+  { pattern: /^x-amavis-alert/i, vendor: 'Amavis', category: 'antivirus' },
+  { pattern: /^x-amavis/i, vendor: 'Amavis', category: 'other' },
+
+  // ── Kaspersky ──
+  { pattern: /^x-klms-antivirus/i, vendor: 'Kaspersky KLMS', category: 'antivirus' },
+  { pattern: /^x-klms-antispam-method/i, vendor: 'Kaspersky KLMS', category: 'spam' },
+  { pattern: /^x-klms-antispam-rate/i, vendor: 'Kaspersky KLMS', category: 'spam' },
+  { pattern: /^x-klms-antispam-status/i, vendor: 'Kaspersky KLMS', category: 'spam' },
+  { pattern: /^x-klms-antiphishing/i, vendor: 'Kaspersky KLMS', category: 'phishing' },
+  { pattern: /^x-klms/i, vendor: 'Kaspersky KLMS', category: 'other' },
+
+  // ── Forcepoint ──
+  { pattern: /^x-forcepoint/i, vendor: 'Forcepoint', category: 'other' },
+
+  // ── Generic / RFC ──
+  { pattern: /^x-originating-ip/i, vendor: 'Generic', category: 'routing' },
+  { pattern: /^x-mailer$/i, vendor: 'Generic', category: 'other' },
+  { pattern: /^user-agent$/i, vendor: 'Generic', category: 'other' },
+  { pattern: /^x-priority$/i, vendor: 'Generic', category: 'policy' },
+  { pattern: /^precedence$/i, vendor: 'Generic (RFC)', category: 'policy' },
+  { pattern: /^list-unsubscribe/i, vendor: 'Generic (RFC)', category: 'policy' },
+  { pattern: /^x-auto-response-suppress/i, vendor: 'Generic', category: 'policy' },
 ];
 
 // ── Header parsing ─────────────────────────────────────────────────────────
@@ -273,6 +409,23 @@ function findClassificationHeaders(headers: HeaderEntry[]): ClassificationHeader
   return found;
 }
 
+// ── Security / SEG header detection ────────────────────────────────────────
+
+function findSecurityHeaders(headers: HeaderEntry[]): SecurityHeader[] {
+  const found: SecurityHeader[] = [];
+
+  for (const hdr of headers) {
+    for (const entry of SECURITY_HEADER_PATTERNS) {
+      if (entry.pattern.test(hdr.name)) {
+        found.push({ name: hdr.name, value: hdr.value, vendor: entry.vendor, category: entry.category });
+        break;
+      }
+    }
+  }
+
+  return found;
+}
+
 // ── Summary extraction ─────────────────────────────────────────────────────
 
 function getHeaderValue(headers: HeaderEntry[], name: string): string {
@@ -350,9 +503,10 @@ export function parseEmailHeaders(rawInput: string): ParsedEmail {
   const hops = buildHops(headers);
   const authResults = parseAuthResults(headers);
   const classificationHeaders = findClassificationHeaders(headers);
+  const securityHeaders = findSecurityHeaders(headers);
   const summary = buildSummary(headers, hops, authResults);
 
-  return { headers, hops, authResults, classificationHeaders, summary, body };
+  return { headers, hops, authResults, classificationHeaders, securityHeaders, summary, body };
 }
 
 export async function parseEmlFile(file: File): Promise<string> {

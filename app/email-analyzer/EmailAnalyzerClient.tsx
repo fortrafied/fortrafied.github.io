@@ -12,7 +12,29 @@ import {
 } from '../lib/email-parser';
 
 type InputMode = 'paste' | 'file';
-type ActiveTab = 'summary' | 'hops' | 'auth' | 'classification' | 'headers' | 'raw';
+type ActiveTab = 'summary' | 'hops' | 'auth' | 'security' | 'classification' | 'headers' | 'raw';
+
+const categoryLabels: Record<string, string> = {
+  spam: 'Spam / Anti-Spam',
+  antivirus: 'Antivirus / Malware',
+  phishing: 'Phishing / Impersonation',
+  encryption: 'Encryption',
+  policy: 'Policy / Routing Rules',
+  reputation: 'Reputation / Scoring',
+  routing: 'Routing / Transport',
+  other: 'Other',
+};
+
+const categoryColors: Record<string, string> = {
+  spam: 'tag-orange',
+  antivirus: 'tag-red',
+  phishing: 'tag-red',
+  encryption: 'tag-green',
+  policy: 'tag-blue',
+  reputation: 'tag-purple',
+  routing: 'tag-blue',
+  other: 'tag-blue',
+};
 
 const sampleHeaders = `Delivered-To: recipient@example.com
 Received: by 2002:a05:6512:3ca6:0:0:0:0 with SMTP id bi38csp2651234lfb;
@@ -48,8 +70,17 @@ MSIP_Label_12345678-1234-1234-1234-123456789abc_Enabled: true
 MSIP_Label_12345678-1234-1234-1234-123456789abc_Name: Confidential
 MSIP_Label_12345678-1234-1234-1234-123456789abc_SiteId: abcd1234-ab12-cd34-ef56-abcdef123456
 Sensitivity: Company-Confidential
+X-Agari-Authentication-Results: agari.example.com; dkim=pass header.d=example.com; spf=pass; dmarc=pass
+X-SEG-Spam: clean
+X-MSW-JEMD-Malware: clean
+X-MSW-JEMD-Mailshell-Spam: score=0, verdict=ham
+X-MSW-JEMD-Rspamd-Spam: score=1.2, action=no action
+X-Forefront-Antispam-Report: CIP:198.51.100.50;CTRY:US;LANG:en;SCL:-1;SRV:;IPV:NLI;SFV:NSPM;H:mail-out.example.com;PTR:mail-out.example.com;CAT:NONE
+X-Microsoft-Antispam-Mailbox-Delivery: ucf:0;jmr:0;auth:0;dest:I;ENG:(910001)(944506458002)(944626604003)
+X-Microsoft-Antispam: BCL:0
 X-Spam-Status: No, score=-2.1 required=5.0
 X-Spam-Score: -2.1
+X-Virus-Scanned: ClamAV at gateway.example.com
 X-Mailer: Microsoft Outlook 16.0
 From: "John Smith" <sender@example.com>
 To: "Jane Doe" <recipient@example.com>
@@ -198,6 +229,7 @@ export default function EmailAnalyzerClient() {
               ['summary', 'Summary'],
               ['hops', `Routing (${parsed.hops.length} hops)`],
               ['auth', `Authentication (${parsed.authResults.length})`],
+              ['security', `Security (${parsed.securityHeaders.length})`],
               ['classification', `Classification (${parsed.classificationHeaders.length})`],
               ['headers', `All Headers (${parsed.headers.length})`],
               ['raw', 'Raw'],
@@ -344,6 +376,122 @@ export default function EmailAnalyzerClient() {
                 <div className="data-type">
                   <h4>ARC (Authenticated Received Chain)</h4>
                   <p>Preserves authentication results across mail forwarding. Helps prevent legitimate forwarded mail from failing DMARC checks.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Security / SEG tab */}
+          {activeTab === 'security' && (
+            <div className="test-panel">
+              <h2>Security &amp; SEG Headers</h2>
+              <p style={{ color: '#9e9e9e', fontSize: '0.9rem', marginBottom: 16 }}>
+                Headers injected by Secure Email Gateways (SEGs), anti-spam engines, antivirus scanners, and email security products.
+              </p>
+
+              {parsed.securityHeaders.length === 0 ? (
+                <div className="info-box">
+                  <strong>No security headers detected.</strong> This email does not contain headers from known email security products.
+                </div>
+              ) : (
+                <>
+                  {/* Vendor summary */}
+                  {(() => {
+                    const vendors: Record<string, number> = {};
+                    const cats: Record<string, number> = {};
+                    for (const sh of parsed.securityHeaders) {
+                      vendors[sh.vendor] = (vendors[sh.vendor] || 0) + 1;
+                      cats[sh.category] = (cats[sh.category] || 0) + 1;
+                    }
+                    return (
+                      <>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                          {Object.entries(vendors).map(([vendor, count]) => (
+                            <div key={vendor} style={{ background: '#0d1117', border: '1px solid #1e2a45', borderRadius: 8, padding: '10px 16px' }}>
+                              <span style={{ color: '#4fc3f7', fontWeight: 600, fontSize: '0.85rem' }}>{vendor}</span>
+                              <span style={{ color: '#757575', marginLeft: 8, fontSize: '0.8rem' }}>{count}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+                          {Object.entries(cats).map(([cat, count]) => (
+                            <span key={cat} className={`tag ${categoryColors[cat] ?? 'tag-blue'}`}>
+                              {categoryLabels[cat] ?? cat} ({count})
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
+
+                  {/* Grouped by vendor */}
+                  {(() => {
+                    const grouped: Record<string, typeof parsed.securityHeaders> = {};
+                    for (const sh of parsed.securityHeaders) {
+                      (grouped[sh.vendor] ??= []).push(sh);
+                    }
+                    return Object.entries(grouped).map(([vendor, items]) => (
+                      <div key={vendor} style={{ marginBottom: 20 }}>
+                        <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: 10 }}>{vendor}</h3>
+                        <div style={{ display: 'grid', gap: 8 }}>
+                          {items.map((sh, i) => (
+                            <div
+                              key={i}
+                              style={{ background: '#0d1117', border: '1px solid #1e2a45', borderRadius: 8, padding: '12px 16px' }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                <span style={{ color: '#4fc3f7', fontWeight: 600, fontFamily: "'Consolas','Monaco',monospace", fontSize: '0.8rem' }}>
+                                  {sh.name}
+                                </span>
+                                <span className={`tag ${categoryColors[sh.category] ?? 'tag-blue'}`} style={{ fontSize: '0.6rem' }}>
+                                  {categoryLabels[sh.category] ?? sh.category}
+                                </span>
+                              </div>
+                              <div style={{ color: '#b0bec5', fontFamily: "'Consolas','Monaco',monospace", fontSize: '0.75rem', wordBreak: 'break-all' }}>
+                                {sh.value}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </>
+              )}
+
+              <h3 style={{ color: '#fff', marginTop: 24, marginBottom: 12 }}>Supported Products</h3>
+              <div className="data-types-grid">
+                <div className="data-type">
+                  <h4>Fortra (Agari / Clearswift)</h4>
+                  <p>X-Agari-* (DMARC/BEC), X-SEG-* (Clearswift SEG), X-MSW-JEMD-* (malware, spam scoring via Mailshell and Rspamd engines).</p>
+                </div>
+                <div className="data-type">
+                  <h4>Microsoft Exchange / Defender</h4>
+                  <p>X-Forefront-Antispam-Report, X-Microsoft-Antispam, SCL/PCL scoring, X-MS-Exchange-Organization-* transport headers.</p>
+                </div>
+                <div className="data-type">
+                  <h4>Proofpoint / Mimecast / Barracuda</h4>
+                  <p>Vendor-specific spam details, virus versions, bulk signatures, impersonation protection, and envelope tracking headers.</p>
+                </div>
+                <div className="data-type">
+                  <h4>Cisco IronPort / SenderBase</h4>
+                  <p>X-IronPort-Anti-Spam, X-IronPort-AV (antivirus), X-SBRS (SenderBase Reputation Score from -10 to +10).</p>
+                </div>
+                <div className="data-type">
+                  <h4>SpamAssassin / Rspamd / ClamAV</h4>
+                  <p>X-Spam-Status/Score/Flag/Level/Report, X-Spamd-Result, X-Virus-Scanned, X-Amavis-Alert.</p>
+                </div>
+                <div className="data-type">
+                  <h4>Trend Micro / Symantec / Kaspersky</h4>
+                  <p>X-TMASE-Result, X-TM-AS-*, X-Brightmail-Tracker, X-KLMS-AntiVirus/AntiSpam/AntiPhishing headers.</p>
+                </div>
+                <div className="data-type">
+                  <h4>Fortinet FortiMail</h4>
+                  <p>X-FEAS-* (system whitelist, spam outbreak, banned words, dictionary matches), X-FortiMail-* headers.</p>
+                </div>
+                <div className="data-type">
+                  <h4>Trellix (FireEye) / Sophos</h4>
+                  <p>X-FireEye-*, X-FE-* threat detection headers. X-Sophos-*, X-Lased anti-spam scanning results.</p>
                 </div>
               </div>
             </div>
