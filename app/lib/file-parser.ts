@@ -436,13 +436,144 @@ function formatBytes(bytes: number): string {
   return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
+// ── HTML / Vera encrypted file parsing ────────────────────────────────────
+
+interface VeraDocsPayload {
+  version?: number;
+  docId?: string;
+  docName?: string;
+  mimeType?: string;
+  serverUrl?: string;
+  tenant?: string;
+  [key: string]: unknown;
+}
+
+async function parseHtmlFile(buffer: ArrayBuffer, file: File): Promise<ParsedFile> {
+  const html = new TextDecoder().decode(buffer);
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  const properties: DocumentProperty[] = [];
+  const classificationLabels: DocumentProperty[] = [];
+
+  // Detect Vera encrypted file via <meta name="veradocs">
+  const veraDocsMeta = doc.querySelector('meta[name="veradocs"]');
+  const isVera = !!veraDocsMeta;
+
+  if (isVera && veraDocsMeta) {
+    const rawJson = veraDocsMeta.getAttribute('content') ?? '';
+    let veraData: VeraDocsPayload = {};
+    try {
+      veraData = JSON.parse(rawJson) as VeraDocsPayload;
+    } catch {
+      // Store raw if unparseable
+      properties.push({ name: 'veradocs (raw)', value: rawJson, source: 'vera' });
+    }
+
+    // Present each field from the veradocs JSON
+    if (veraData.version !== undefined) {
+      properties.push({ name: 'Vera Format Version', value: String(veraData.version), source: 'vera' });
+    }
+    if (veraData.docId) {
+      properties.push({ name: 'Document ID', value: veraData.docId, source: 'vera' });
+    }
+    if (veraData.docName) {
+      properties.push({ name: 'Original File Name', value: veraData.docName, source: 'vera' });
+    }
+    if (veraData.mimeType) {
+      properties.push({ name: 'Original MIME Type', value: veraData.mimeType, source: 'vera' });
+    }
+    if (veraData.serverUrl) {
+      properties.push({ name: 'Vera Server URL', value: veraData.serverUrl, source: 'vera' });
+    }
+    if (veraData.tenant) {
+      properties.push({ name: 'Vera Tenant', value: veraData.tenant, source: 'vera' });
+    }
+    // Capture any additional/unexpected fields
+    const knownKeys = new Set(['version', 'docId', 'docName', 'mimeType', 'serverUrl', 'tenant']);
+    for (const [key, val] of Object.entries(veraData)) {
+      if (!knownKeys.has(key) && val !== undefined && val !== null) {
+        properties.push({ name: `Vera: ${key}`, value: String(val), source: 'vera' });
+      }
+    }
+
+    // serverurl attribute on the meta tag itself (sometimes duplicated)
+    const serverUrlAttr = veraDocsMeta.getAttribute('serverurl');
+    if (serverUrlAttr && serverUrlAttr !== veraData.serverUrl) {
+      properties.push({ name: 'Vera Server URL (attr)', value: serverUrlAttr, source: 'vera' });
+    }
+
+    // Mark the file as Vera-encrypted (classification label)
+    classificationLabels.push({
+      name: 'Vera Encrypted File',
+      value: veraData.docName
+        ? `${veraData.docName} — encrypted via Vera (tenant: ${veraData.tenant ?? 'unknown'})`
+        : 'Vera encrypted document detected',
+      source: 'Vera',
+    });
+  }
+
+  // Extract other <meta> tags from the <head>
+  const metas = doc.querySelectorAll('head meta');
+  const skipNames = new Set(['veradocs', 'charset', 'viewport']);
+  metas.forEach((meta) => {
+    const name = meta.getAttribute('name') ?? meta.getAttribute('http-equiv') ?? '';
+    if (!name || skipNames.has(name.toLowerCase())) return;
+    const value = meta.getAttribute('content') ?? meta.getAttribute('value') ?? '';
+    if (!value || value === '$(CLASSIFICATION)') {
+      // Template placeholder — note its existence but skip empty values
+      if (name.toLowerCase() === 'classification') {
+        properties.push({ name: 'Classification Tag', value: '(template placeholder — not set)', source: 'vera' });
+      }
+      return;
+    }
+    const product = identifyClassificationLabel(name);
+    const entry: DocumentProperty = {
+      name,
+      value,
+      source: product ? 'classification' : (isVera ? 'vera' : 'html'),
+    };
+    properties.push(entry);
+    if (product) {
+      classificationLabels.push({ name, value, source: product });
+    }
+  });
+
+  // Extract <title>
+  const title = doc.querySelector('title')?.textContent?.trim();
+  if (title) {
+    properties.push({ name: 'Page Title', value: title, source: isVera ? 'vera' : 'html' });
+  }
+
+  // Extract linked resources (CSS/JS from Vera server)
+  const links = doc.querySelectorAll('link[rel="stylesheet"], script[src]');
+  links.forEach((el) => {
+    const url = el.getAttribute('href') ?? el.getAttribute('src') ?? '';
+    if (url) {
+      const tag = el.tagName.toLowerCase() === 'link' ? 'Stylesheet' : 'Script';
+      properties.push({ name: `Linked ${tag}`, value: url, source: isVera ? 'vera' : 'html' });
+    }
+  });
+
+  // Extract visible text for classification scanning
+  const body = doc.querySelector('body');
+  const text = body?.textContent?.trim() ?? '';
+
+  return {
+    text,
+    properties,
+    classificationLabels,
+    fileType: isVera ? 'Vera Encrypted File' : 'HTML',
+  };
+}
+
 // ── Main entry point ───────────────────────────────────────────────────────
 
 function getExtension(filename: string): string {
   return filename.split('.').pop()?.toLowerCase() ?? '';
 }
 
-export const ACCEPTED_TYPES = '.docx,.xlsx,.pptx,.pdf,.txt';
+export const ACCEPTED_TYPES = '.docx,.xlsx,.pptx,.pdf,.txt,.html,.htm';
 
 export async function parseFile(file: File): Promise<ParsedFile> {
   const buffer = await file.arrayBuffer();
@@ -460,6 +591,10 @@ export async function parseFile(file: File): Promise<ParsedFile> {
       break;
     case 'txt':
       result = await parseTxtFile(buffer, file);
+      break;
+    case 'html':
+    case 'htm':
+      result = await parseHtmlFile(buffer, file);
       break;
     default:
       throw new Error(`Unsupported file type: .${ext}`);

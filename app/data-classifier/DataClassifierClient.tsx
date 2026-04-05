@@ -46,13 +46,17 @@ const sourceLabels: Record<string, string> = {
   'pdf-info': 'PDF Info',
   'pdf-custom': 'PDF Custom',
   xmp: 'XMP Metadata',
+  vera: 'Vera Encryption',
+  html: 'HTML Metadata',
 };
 
 function SourceBadge({ source }: { source: string }) {
   const isClassification = source === 'classification';
+  const isVera = source === 'vera';
+  const tagClass = isClassification ? 'tag-red' : isVera ? 'tag-purple' : 'tag-blue';
   return (
     <span
-      className={`tag ${isClassification ? 'tag-red' : 'tag-blue'}`}
+      className={`tag ${tagClass}`}
       style={{ fontSize: '0.65rem' }}
     >
       {sourceLabels[source] ?? source}
@@ -307,7 +311,7 @@ export default function DataClassifierClient() {
               <div style={{ fontSize: '2rem', color: '#4fc3f7', marginBottom: 12 }}>&#128196;</div>
               <p style={{ color: '#9e9e9e', marginBottom: 8 }}>Drag &amp; drop a file here, or click to browse</p>
               <p style={{ color: '#616161', fontSize: '0.8rem' }}>
-                Supports: .docx, .xlsx, .pptx, .pdf, .txt
+                Supports: .docx, .xlsx, .pptx, .pdf, .txt, .html
               </p>
               <input
                 type="file"
