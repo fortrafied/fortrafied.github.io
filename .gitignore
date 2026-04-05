@@ -16,8 +16,8 @@
 # next.js
 /.next/
 
-# The `out` directory should not be ignored by version control
-# /out/
+# next.js static export output (built by GitHub Actions)
+/out/
 
 # production
 /build
