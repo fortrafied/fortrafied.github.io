@@ -39,6 +39,7 @@ const dropdowns: NavDropdown[] = [
       { label: 'Classification Tester', href: '/data-classifier' },
       { label: 'Classification Builder', href: '/classification-builder' },
       { label: 'DP Solution Composer', href: '/dp-solution' },
+      { label: 'Email Header Analyzer', href: '/email-analyzer' },
       { label: 'DLP Prompt Builder', href: '/prompt-builder' },
       { label: 'File Hash Generator', href: '/hash-generator' },
     ],
