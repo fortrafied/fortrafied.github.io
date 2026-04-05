@@ -99,6 +99,8 @@ export default function EmailAnalyzerClient() {
   const [parseError, setParseError] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [headerFilter, setHeaderFilter] = useState('');
+  const [secVendorFilter, setSecVendorFilter] = useState<string | null>(null);
+  const [secCategoryFilter, setSecCategoryFilter] = useState<string | null>(null);
 
   function analyze() {
     if (!rawInput.trim()) return;
@@ -130,6 +132,8 @@ export default function EmailAnalyzerClient() {
     setParsed(null);
     setParseError('');
     setHeaderFilter('');
+    setSecVendorFilter(null);
+    setSecCategoryFilter(null);
   }
 
   const filteredHeaders = parsed?.headers.filter(
@@ -395,7 +399,7 @@ export default function EmailAnalyzerClient() {
                 </div>
               ) : (
                 <>
-                  {/* Vendor summary */}
+                  {/* Vendor filter chips */}
                   {(() => {
                     const vendors: Record<string, number> = {};
                     const cats: Record<string, number> = {};
@@ -405,56 +409,128 @@ export default function EmailAnalyzerClient() {
                     }
                     return (
                       <>
+                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#757575', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Filter by Vendor
+                        </label>
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                          <button
+                            className={`btn btn-sm ${secVendorFilter === null ? 'btn-primary' : 'btn-outline'}`}
+                            onClick={() => setSecVendorFilter(null)}
+                          >
+                            All ({parsed.securityHeaders.length})
+                          </button>
                           {Object.entries(vendors).map(([vendor, count]) => (
-                            <div key={vendor} style={{ background: '#0d1117', border: '1px solid #1e2a45', borderRadius: 8, padding: '10px 16px' }}>
-                              <span style={{ color: '#4fc3f7', fontWeight: 600, fontSize: '0.85rem' }}>{vendor}</span>
-                              <span style={{ color: '#757575', marginLeft: 8, fontSize: '0.8rem' }}>{count}</span>
-                            </div>
+                            <button
+                              key={vendor}
+                              className={`btn btn-sm ${secVendorFilter === vendor ? 'btn-primary' : 'btn-outline'}`}
+                              onClick={() => setSecVendorFilter(secVendorFilter === vendor ? null : vendor)}
+                            >
+                              {vendor} ({count})
+                            </button>
                           ))}
                         </div>
+
+                        <label style={{ display: 'block', fontSize: '0.8rem', color: '#757575', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          Filter by Category
+                        </label>
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-                          {Object.entries(cats).map(([cat, count]) => (
-                            <span key={cat} className={`tag ${categoryColors[cat] ?? 'tag-blue'}`}>
-                              {categoryLabels[cat] ?? cat} ({count})
-                            </span>
-                          ))}
+                          <button
+                            className={`btn btn-sm ${secCategoryFilter === null ? 'btn-primary' : 'btn-outline'}`}
+                            onClick={() => setSecCategoryFilter(null)}
+                          >
+                            All
+                          </button>
+                          {Object.entries(cats).map(([cat, count]) => {
+                            const isActive = secCategoryFilter === cat;
+                            return (
+                              <button
+                                key={cat}
+                                style={{
+                                  cursor: 'pointer',
+                                  padding: '4px 12px',
+                                  borderRadius: 6,
+                                  border: `1px solid ${isActive ? '#4fc3f7' : '#1e2a45'}`,
+                                  background: isActive ? 'rgba(79,195,247,0.15)' : '#0d1117',
+                                  color: isActive ? '#4fc3f7' : '#b0bec5',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 600,
+                                  fontFamily: 'inherit',
+                                  transition: 'all 0.2s',
+                                }}
+                                onClick={() => setSecCategoryFilter(isActive ? null : cat)}
+                              >
+                                {categoryLabels[cat] ?? cat} ({count})
+                              </button>
+                            );
+                          })}
                         </div>
                       </>
                     );
                   })()}
 
-                  {/* Grouped by vendor */}
+                  {/* Filtered & grouped results */}
                   {(() => {
-                    const grouped: Record<string, typeof parsed.securityHeaders> = {};
-                    for (const sh of parsed.securityHeaders) {
+                    const filtered = parsed.securityHeaders.filter((sh) => {
+                      if (secVendorFilter && sh.vendor !== secVendorFilter) return false;
+                      if (secCategoryFilter && sh.category !== secCategoryFilter) return false;
+                      return true;
+                    });
+
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="info-box">
+                          No headers match the current filters.{' '}
+                          <button
+                            style={{ background: 'none', border: 'none', color: '#4fc3f7', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', textDecoration: 'underline' }}
+                            onClick={() => { setSecVendorFilter(null); setSecCategoryFilter(null); }}
+                          >
+                            Clear filters
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    const grouped: Record<string, typeof filtered> = {};
+                    for (const sh of filtered) {
                       (grouped[sh.vendor] ??= []).push(sh);
                     }
-                    return Object.entries(grouped).map(([vendor, items]) => (
-                      <div key={vendor} style={{ marginBottom: 20 }}>
-                        <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: 10 }}>{vendor}</h3>
-                        <div style={{ display: 'grid', gap: 8 }}>
-                          {items.map((sh, i) => (
-                            <div
-                              key={i}
-                              style={{ background: '#0d1117', border: '1px solid #1e2a45', borderRadius: 8, padding: '12px 16px' }}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                                <span style={{ color: '#4fc3f7', fontWeight: 600, fontFamily: "'Consolas','Monaco',monospace", fontSize: '0.8rem' }}>
-                                  {sh.name}
-                                </span>
-                                <span className={`tag ${categoryColors[sh.category] ?? 'tag-blue'}`} style={{ fontSize: '0.6rem' }}>
-                                  {categoryLabels[sh.category] ?? sh.category}
-                                </span>
-                              </div>
-                              <div style={{ color: '#b0bec5', fontFamily: "'Consolas','Monaco',monospace", fontSize: '0.75rem', wordBreak: 'break-all' }}>
-                                {sh.value}
-                              </div>
+
+                    return (
+                      <>
+                        <p style={{ color: '#757575', fontSize: '0.8rem', marginBottom: 12 }}>
+                          Showing {filtered.length} of {parsed.securityHeaders.length} headers
+                        </p>
+                        {Object.entries(grouped).map(([vendor, items]) => (
+                          <div key={vendor} style={{ marginBottom: 20 }}>
+                            <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: 10 }}>{vendor}</h3>
+                            <div style={{ display: 'grid', gap: 8 }}>
+                              {items.map((sh, i) => (
+                                <div
+                                  key={i}
+                                  style={{ background: '#0d1117', border: '1px solid #1e2a45', borderRadius: 8, padding: '12px 16px' }}
+                                >
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                    <span style={{ color: '#4fc3f7', fontWeight: 600, fontFamily: "'Consolas','Monaco',monospace", fontSize: '0.8rem' }}>
+                                      {sh.name}
+                                    </span>
+                                    <button
+                                      className={`tag ${categoryColors[sh.category] ?? 'tag-blue'}`}
+                                      style={{ fontSize: '0.6rem', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}
+                                      onClick={() => setSecCategoryFilter(secCategoryFilter === sh.category ? null : sh.category)}
+                                    >
+                                      {categoryLabels[sh.category] ?? sh.category}
+                                    </button>
+                                  </div>
+                                  <div style={{ color: '#b0bec5', fontFamily: "'Consolas','Monaco',monospace", fontSize: '0.75rem', wordBreak: 'break-all' }}>
+                                    {sh.value}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    ));
+                          </div>
+                        ))}
+                      </>
+                    );
                   })()}
                 </>
               )}
