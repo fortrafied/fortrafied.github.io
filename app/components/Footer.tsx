@@ -35,7 +35,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; 2025 Fortrafied. Authorized security testing only. All sample data is synthetic.</p>
+          <p>&copy; {new Date().getFullYear()} Fortrafied. Authorized security testing only. All sample data is synthetic.</p>
           <p style={{ color: '#616161', fontSize: '0.75rem', marginTop: '6px' }}>
             Fortrafied is an independent project and is not affiliated with,
             endorsed by, or sponsored by Fortra, LLC or any other company. All
