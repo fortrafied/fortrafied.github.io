@@ -457,6 +457,115 @@ select.form-control { cursor: pointer; }
     .assess-check-buttons { align-self: flex-start; }
 }
 
+/* ===== Coverage Map ===== */
+.cov-grid-scroll { overflow-x: auto; padding: 0 24px; }
+.cov-grid {
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    width: 100%;
+    min-width: 800px;
+}
+.cov-grid th, .cov-grid td {
+    border: 1px solid #1a2035;
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
+}
+.cov-corner {
+    background: #0a0e17;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    min-width: 60px;
+    font-size: 0.7rem;
+    color: #616161;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: none;
+}
+.cov-corner-bottom { border-top: none; padding: 6px 8px; }
+.cov-cat-header {
+    background: #111827;
+    color: #4fc3f7;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 4px;
+}
+.cov-col-header {
+    background: #0d1117;
+    color: #b0bec5;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 8px 4px;
+    cursor: context-menu;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+.cov-col-header.cov-highlight { background: rgba(79,195,247,0.08); }
+.cov-row-cat {
+    background: #111827;
+    color: #4fc3f7;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 8px;
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    min-width: 30px;
+}
+.cov-row-label {
+    background: #0d1117;
+    color: #b0bec5;
+    font-size: 0.78rem;
+    text-align: left;
+    padding: 6px 10px;
+    white-space: nowrap;
+    cursor: context-menu;
+    position: sticky;
+    left: 30px;
+    z-index: 1;
+    transition: background 0.15s;
+}
+.cov-row-label.cov-highlight { background: rgba(79,195,247,0.06); }
+.cov-cell {
+    width: 54px;
+    height: 32px;
+    cursor: pointer;
+    background: #0a0e17;
+    transition: background 0.1s;
+    position: relative;
+}
+.cov-cell:hover { background: rgba(79,195,247,0.08); }
+.cov-cell-highlight { background: rgba(79,195,247,0.03); }
+.cov-dot {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+}
+.cov-legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+.cov-legend-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.85rem;
+}
+.cov-legend-row .cov-legend-dot { margin-top: 5px; }
+
 /* ===== Assessment Page ===== */
 .assess-stat-card {
     background: #0d1117;
