@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, DragEvent, FormEvent, ChangeEvent } from 'react';
+import Link from 'next/link';
 
 const presets: Record<string, string> = {
   ssn: "Name: John A. Smith\nSSN: 078-05-1120\nDate of Birth: 01/15/1985\n\nName: Jane B. Doe\nSSN: 219-09-9999\nDate of Birth: 03/22/1990\n\nName: Robert C. Johnson\nSSN: 323-45-6789\nDate of Birth: 07/04/1978",
@@ -420,6 +421,28 @@ export default function PostTestForm({ variant }: PostTestFormProps) {
             </div>
           </>
         )}
+      </div>
+
+      {/* Related Tools */}
+      <div className="test-panel">
+        <h2>Related Tools</h2>
+        <div className="card-grid" style={{ marginTop: 16 }}>
+          <Link href="/sample-data" className="related-tool-card">
+            <span className="related-tool-label">Sample Data Downloads</span>
+            <span className="related-tool-desc">Generate synthetic sensitive data files to use as test payloads.</span>
+            <span className="related-tool-arrow">&rarr;</span>
+          </Link>
+          <Link href={isHttp ? '/https-post' : '/http-post'} className="related-tool-card">
+            <span className="related-tool-label">{isHttp ? 'HTTPS POST Test' : 'HTTP POST Test'}</span>
+            <span className="related-tool-desc">{isHttp ? 'Test with encrypted HTTPS traffic to validate SSL inspection.' : 'Test with plaintext HTTP traffic for baseline DLP detection.'}</span>
+            <span className="related-tool-arrow">&rarr;</span>
+          </Link>
+          <Link href="/email-test" className="related-tool-card">
+            <span className="related-tool-label">Email / SMTP Test</span>
+            <span className="related-tool-desc">Test email-based exfiltration detection with SMTP protocol.</span>
+            <span className="related-tool-arrow">&rarr;</span>
+          </Link>
+        </div>
       </div>
     </main>
   );
