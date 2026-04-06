@@ -33,11 +33,17 @@ const dropdowns: NavDropdown[] = [
     ],
   },
   {
+    label: 'Data at Rest',
+    items: [
+      { label: 'Sample Data Downloads', href: '/sample-data' },
+      { label: 'Classification Tester', href: '/data-classifier' },
+      { label: 'Classification Builder', href: '/classification-builder' },
+    ],
+  },
+  {
     label: 'Tools',
     items: [
       { label: 'Regex Pattern Tester', href: '/regex-tester' },
-      { label: 'Classification Tester', href: '/data-classifier' },
-      { label: 'Classification Builder', href: '/classification-builder' },
       { label: 'Email Header Analyzer', href: '/email-analyzer' },
       { label: 'DLP Prompt Builder', href: '/prompt-builder' },
       { label: 'File Hash Generator', href: '/hash-generator' },
@@ -104,14 +110,6 @@ export default function Navbar() {
               </ul>
             </li>
           ))}
-          <li>
-            <Link
-              href="/sample-data"
-              onClick={() => setMobileOpen(false)}
-            >
-              Sample Data
-            </Link>
-          </li>
           <li>
             <Link href="/faq" onClick={() => setMobileOpen(false)}>
               FAQ

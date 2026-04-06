@@ -58,11 +58,13 @@ export default function Home() {
               <div className="card-icon">&#128451;</div>
               <h3>Data at Rest</h3>
               <p>
-                Download sample files containing synthetic sensitive data to test
-                discovery scanning on endpoints, file servers, and cloud storage.
+                Test discovery scanning with synthetic sensitive data files, and
+                classify content to identify PII, PCI, PHI, and custom patterns.
               </p>
               <ul className="card-links">
-                <li><Link href="/sample-data">Download Sample Data</Link></li>
+                <li><Link href="/sample-data">Sample Data Downloads</Link></li>
+                <li><Link href="/data-classifier">Classification Tester</Link></li>
+                <li><Link href="/classification-builder">Classification Builder</Link></li>
               </ul>
             </div>
           </div>
@@ -85,13 +87,13 @@ export default function Home() {
               <Link href="/regex-tester" className="btn btn-outline">Open Tool</Link>
             </div>
             <div className="card">
-              <div className="card-icon">&#128270;</div>
-              <h3>Classification Tester</h3>
+              <div className="card-icon">&#9993;</div>
+              <h3>Email Header Analyzer</h3>
               <p>
-                Paste text and automatically identify sensitive data types
-                present &mdash; PII, PCI, PHI, credentials, and custom patterns.
+                Analyze email headers for SPF, DKIM, and DMARC authentication
+                results. Trace message routing and identify security issues.
               </p>
-              <Link href="/data-classifier" className="btn btn-outline">Open Tool</Link>
+              <Link href="/email-analyzer" className="btn btn-outline">Open Tool</Link>
             </div>
             <div className="card">
               <div className="card-icon">#</div>
