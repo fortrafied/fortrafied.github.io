@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import Link from 'next/link';
 import { downloadJSON } from '../lib/export-utils';
 
 /* ===== Data Model ===== */
@@ -13,6 +14,12 @@ const STATUS_LABELS: Record<string, string> = {
   partial: 'Partial',
   gap: 'Gap',
   na: 'N/A',
+};
+const STATUS_LETTERS: Record<string, string> = {
+  covered: '\u2713',
+  partial: '~',
+  gap: '\u2717',
+  na: '\u2014',
 };
 const STATUS_COLORS: Record<string, string> = {
   covered: '#66bb6a',
@@ -35,7 +42,6 @@ interface ChannelCol {
 }
 
 const dataTypes: DataTypeRow[] = [
-  // PII
   { id: 'ssn', label: 'Social Security Numbers', category: 'PII' },
   { id: 'names', label: 'Full Names', category: 'PII' },
   { id: 'dob', label: 'Dates of Birth', category: 'PII' },
@@ -43,40 +49,33 @@ const dataTypes: DataTypeRow[] = [
   { id: 'phone', label: 'Phone Numbers', category: 'PII' },
   { id: 'address', label: 'Physical Addresses', category: 'PII' },
   { id: 'dl', label: 'Driver License Numbers', category: 'PII' },
-  // PCI
   { id: 'ccn', label: 'Credit Card Numbers', category: 'PCI' },
   { id: 'cvv', label: 'CVV / Security Codes', category: 'PCI' },
   { id: 'cc_exp', label: 'Card Expiration Dates', category: 'PCI' },
-  // PHI
   { id: 'mrn', label: 'Medical Record Numbers', category: 'PHI' },
   { id: 'icd10', label: 'ICD-10 Diagnosis Codes', category: 'PHI' },
   { id: 'health_plan', label: 'Health Plan IDs', category: 'PHI' },
   { id: 'npi', label: 'NPI Numbers', category: 'PHI' },
-  // Financial
   { id: 'routing', label: 'Routing Numbers', category: 'Financial' },
   { id: 'bank_acct', label: 'Bank Account Numbers', category: 'Financial' },
   { id: 'swift', label: 'SWIFT / BIC Codes', category: 'Financial' },
   { id: 'iban', label: 'IBAN Numbers', category: 'Financial' },
   { id: 'ein', label: 'EIN / Tax IDs', category: 'Financial' },
-  // Credentials
   { id: 'api_keys', label: 'API Keys / Tokens', category: 'Credentials' },
   { id: 'passwords', label: 'Passwords / Secrets', category: 'Credentials' },
-  { id: 'private_keys', label: 'Private Keys / Certificates', category: 'Credentials' },
+  { id: 'private_keys', label: 'Private Keys / Certs', category: 'Credentials' },
   { id: 'conn_strings', label: 'Connection Strings', category: 'Credentials' },
 ];
 
 const channels: ChannelCol[] = [
-  // Data in Motion
   { id: 'http', label: 'HTTP POST', shortLabel: 'HTTP', category: 'motion' },
   { id: 'https', label: 'HTTPS POST', shortLabel: 'HTTPS', category: 'motion' },
   { id: 'email', label: 'Email / SMTP', shortLabel: 'Email', category: 'motion' },
   { id: 'ftp', label: 'FTP Upload', shortLabel: 'FTP', category: 'motion' },
-  // Data in Use
   { id: 'clipboard', label: 'Clipboard', shortLabel: 'Clip', category: 'use' },
   { id: 'print', label: 'Print / Screenshot', shortLabel: 'Print', category: 'use' },
   { id: 'usb', label: 'USB / Removable', shortLabel: 'USB', category: 'use' },
   { id: 'cloud', label: 'Cloud Upload', shortLabel: 'Cloud', category: 'use' },
-  // Data at Rest
   { id: 'endpoint', label: 'Endpoint Discovery', shortLabel: 'Endpt', category: 'rest' },
   { id: 'server', label: 'File Server Scan', shortLabel: 'Server', category: 'rest' },
   { id: 'cloud_store', label: 'Cloud Storage', shortLabel: 'Cloud St.', category: 'rest' },
@@ -116,12 +115,12 @@ export default function CoverageMapClient() {
     }
   }, [grid]);
 
-  function cycleCell(dtId: string, chId: string) {
+  const cycleCell = useCallback((dtId: string, chId: string) => {
     const key = cellKey(dtId, chId);
-    const current = grid[key] ?? null;
-    const idx = STATUS_CYCLE.indexOf(current);
-    const next = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
     setGrid(prev => {
+      const current = prev[key] ?? null;
+      const idx = STATUS_CYCLE.indexOf(current);
+      const next = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
       const updated = { ...prev };
       if (next === null) {
         delete updated[key];
@@ -130,41 +129,33 @@ export default function CoverageMapClient() {
       }
       return updated;
     });
-  }
+  }, []);
 
-  function fillColumn(chId: string, status: CoverageStatus) {
+  const fillColumn = useCallback((chId: string, status: CoverageStatus) => {
     setGrid(prev => {
       const updated = { ...prev };
       for (const dt of dataTypes) {
         const key = cellKey(dt.id, chId);
-        if (status === null) {
-          delete updated[key];
-        } else {
-          updated[key] = status;
-        }
+        if (status === null) delete updated[key];
+        else updated[key] = status;
       }
       return updated;
     });
-  }
+  }, []);
 
-  function fillRow(dtId: string, status: CoverageStatus) {
+  const fillRow = useCallback((dtId: string, status: CoverageStatus) => {
     setGrid(prev => {
       const updated = { ...prev };
       for (const ch of channels) {
         const key = cellKey(dtId, ch.id);
-        if (status === null) {
-          delete updated[key];
-        } else {
-          updated[key] = status;
-        }
+        if (status === null) delete updated[key];
+        else updated[key] = status;
       }
       return updated;
     });
-  }
+  }, []);
 
-  function resetGrid() {
-    setGrid({});
-  }
+  function resetGrid() { setGrid({}); }
 
   // Stats
   const stats = useMemo(() => {
@@ -187,7 +178,6 @@ export default function CoverageMapClient() {
   const assessedPct = assessed > 0 ? Math.round((assessed / stats.totalCells) * 100) : 0;
   const coveragePct = assessed - stats.na > 0 ? Math.round((stats.covered / (assessed - stats.na)) * 100) : 0;
 
-  // Category stats
   const categoryStats = useMemo(() => {
     const cats: Record<string, { covered: number; partial: number; gap: number; total: number }> = {};
     for (const ch of channels) {
@@ -206,61 +196,58 @@ export default function CoverageMapClient() {
     return cats;
   }, [grid]);
 
+  // Gaps list for summary
+  const gapsList = useMemo(() => {
+    return dataTypes.flatMap(dt =>
+      channels
+        .filter(ch => grid[cellKey(dt.id, ch.id)] === 'gap')
+        .map(ch => ({ dataType: dt.label, dtCategory: dt.category, channel: ch.label, chCategory: CHANNEL_CATEGORY_LABELS[ch.category] }))
+    );
+  }, [grid]);
+
   function exportMap() {
     const exportData = {
       title: 'DLP Coverage Map',
       exportedAt: new Date().toISOString(),
       summary: {
-        totalCells: stats.totalCells,
-        assessed,
-        assessedPercent: assessedPct,
-        covered: stats.covered,
-        partial: stats.partial,
-        gaps: stats.gap,
-        notApplicable: stats.na,
-        unassessed: stats.empty,
-        coveragePercent: coveragePct,
+        totalCells: stats.totalCells, assessed, assessedPercent: assessedPct,
+        covered: stats.covered, partial: stats.partial, gaps: stats.gap,
+        notApplicable: stats.na, unassessed: stats.empty, coveragePercent: coveragePct,
       },
       categoryBreakdown: categoryStats,
-      gaps: dataTypes.flatMap(dt =>
-        channels
-          .filter(ch => grid[cellKey(dt.id, ch.id)] === 'gap')
-          .map(ch => ({ dataType: dt.label, dataCategory: dt.category, channel: ch.label, channelCategory: CHANNEL_CATEGORY_LABELS[ch.category] }))
-      ),
+      gaps: gapsList,
       partialCoverage: dataTypes.flatMap(dt =>
         channels
           .filter(ch => grid[cellKey(dt.id, ch.id)] === 'partial')
           .map(ch => ({ dataType: dt.label, dataCategory: dt.category, channel: ch.label, channelCategory: CHANNEL_CATEGORY_LABELS[ch.category] }))
       ),
       fullGrid: dataTypes.map(dt => ({
-        dataType: dt.label,
-        category: dt.category,
+        dataType: dt.label, category: dt.category,
         channels: Object.fromEntries(channels.map(ch => [ch.label, grid[cellKey(dt.id, ch.id)] ?? 'unassessed'])),
       })),
     };
     downloadJSON(exportData, `dlp-coverage-map-${Date.now()}.json`);
   }
 
-  // Group data types by category for row headers
   const dtCategories = [...new Set(dataTypes.map(d => d.category))];
 
-  // Group channels by category for column headers
-  const chCategoryCounts: { label: string; count: number }[] = [];
+  // Channel category colspan groups
+  const chCategoryGroups: { label: string; count: number }[] = [];
   let lastCat = '';
   for (const ch of channels) {
     const cat = CHANNEL_CATEGORY_LABELS[ch.category];
     if (cat !== lastCat) {
-      chCategoryCounts.push({ label: cat, count: 1 });
+      chCategoryGroups.push({ label: cat, count: 1 });
       lastCat = cat;
     } else {
-      chCategoryCounts[chCategoryCounts.length - 1].count++;
+      chCategoryGroups[chCategoryGroups.length - 1].count++;
     }
   }
 
   return (
     <>
       <div className="info-box">
-        <strong>How to use:</strong> Click any cell to cycle through coverage statuses:
+        <strong>How to use:</strong> Click any cell to cycle through statuses:
         <span style={{ marginLeft: 8 }}>
           <span className="cov-legend-dot" style={{ background: '#66bb6a' }} /> Covered
         </span>
@@ -273,7 +260,7 @@ export default function CoverageMapClient() {
         <span style={{ marginLeft: 8 }}>
           <span className="cov-legend-dot" style={{ background: '#616161' }} /> N/A
         </span>
-        &nbsp;&mdash; Progress saves automatically in your browser.
+        &nbsp;&mdash; Progress saves automatically.
       </div>
 
       {/* Summary Stats */}
@@ -302,7 +289,6 @@ export default function CoverageMapClient() {
           </div>
         </div>
 
-        {/* Category breakdown */}
         {Object.keys(categoryStats).length > 0 && (
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
             {Object.entries(categoryStats).map(([cat, s]) => {
@@ -333,7 +319,7 @@ export default function CoverageMapClient() {
         <div style={{ padding: '0 24px', marginBottom: 16 }}>
           <h2>Coverage Heat Map</h2>
           <p style={{ color: '#9e9e9e', fontSize: '0.85rem' }}>
-            Click cells to set status. Right-click a column header to fill the entire column, or a row label to fill the row.
+            Click cells to set status. Right-click a column header or row label to fill it as &ldquo;Covered.&rdquo;
           </p>
         </div>
 
@@ -342,26 +328,23 @@ export default function CoverageMapClient() {
             <thead>
               {/* Channel category row */}
               <tr>
-                <th className="cov-corner" />
-                {chCategoryCounts.map(c => (
+                <th className="cov-corner" colSpan={2} />
+                {chCategoryGroups.map(c => (
                   <th key={c.label} colSpan={c.count} className="cov-cat-header">
                     {c.label}
                   </th>
                 ))}
               </tr>
-              {/* Channel names */}
+              {/* Channel name row */}
               <tr>
-                <th className="cov-corner cov-corner-bottom">Data Type</th>
+                <th className="cov-corner cov-corner-bottom" colSpan={2}>Data Type</th>
                 {channels.map(ch => (
                   <th
                     key={ch.id}
                     className={`cov-col-header${hoveredCol === ch.id ? ' cov-highlight' : ''}`}
                     onMouseEnter={() => setHoveredCol(ch.id)}
                     onMouseLeave={() => setHoveredCol(null)}
-                    onContextMenu={e => {
-                      e.preventDefault();
-                      fillColumn(ch.id, 'covered');
-                    }}
+                    onContextMenu={e => { e.preventDefault(); fillColumn(ch.id, 'covered'); }}
                     title={`${ch.label} — right-click to fill column`}
                   >
                     {ch.shortLabel}
@@ -383,10 +366,7 @@ export default function CoverageMapClient() {
                       className={`cov-row-label${hoveredRow === dt.id ? ' cov-highlight' : ''}`}
                       onMouseEnter={() => setHoveredRow(dt.id)}
                       onMouseLeave={() => setHoveredRow(null)}
-                      onContextMenu={e => {
-                        e.preventDefault();
-                        fillRow(dt.id, 'covered');
-                      }}
+                      onContextMenu={e => { e.preventDefault(); fillRow(dt.id, 'covered'); }}
                       title={`${dt.label} — right-click to fill row`}
                     >
                       {dt.label}
@@ -399,13 +379,14 @@ export default function CoverageMapClient() {
                           key={ch.id}
                           className={`cov-cell${isHighlighted ? ' cov-cell-highlight' : ''}`}
                           onClick={() => cycleCell(dt.id, ch.id)}
+                          onMouseEnter={() => { setHoveredCol(ch.id); setHoveredRow(dt.id); }}
+                          onMouseLeave={() => { setHoveredCol(null); setHoveredRow(null); }}
                           title={`${dt.label} × ${ch.label}: ${val ? STATUS_LABELS[val] : 'Click to set'}`}
                         >
                           {val && (
-                            <span
-                              className="cov-dot"
-                              style={{ background: STATUS_COLORS[val] }}
-                            />
+                            <span className="cov-dot" style={{ background: STATUS_COLORS[val], color: val === 'na' ? '#9e9e9e' : '#fff' }}>
+                              {STATUS_LETTERS[val]}
+                            </span>
                           )}
                         </td>
                       );
@@ -418,51 +399,88 @@ export default function CoverageMapClient() {
         </div>
       </div>
 
+      {/* Gaps Summary */}
+      {gapsList.length > 0 && (
+        <div className="test-panel">
+          <h2 style={{ color: '#ef5350' }}>Coverage Gaps ({gapsList.length})</h2>
+          <p style={{ color: '#9e9e9e', fontSize: '0.85rem', marginBottom: 16 }}>
+            The following data type + channel combinations are marked as gaps in your coverage.
+          </p>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Data Type</th>
+                <th>Category</th>
+                <th>Channel</th>
+                <th>Vector</th>
+              </tr>
+            </thead>
+            <tbody>
+              {gapsList.map((g, i) => (
+                <tr key={i}>
+                  <td style={{ fontWeight: 600 }}>{g.dataType}</td>
+                  <td><span className="tag tag-blue">{g.dtCategory}</span></td>
+                  <td>{g.channel}</td>
+                  <td><span className="tag tag-orange">{g.chCategory}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {/* Legend & Tips */}
       <div className="test-panel">
-        <h2>Quick Actions & Legend</h2>
+        <h2>Legend &amp; Tips</h2>
         <div className="two-col mt-3">
           <div>
             <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: 12 }}>Status Legend</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div className="cov-legend-row">
-                <span className="cov-legend-dot" style={{ background: '#66bb6a' }} />
+                <span className="cov-dot" style={{ background: '#66bb6a', color: '#fff', flexShrink: 0 }}>{STATUS_LETTERS.covered}</span>
                 <div>
                   <strong style={{ color: '#66bb6a' }}>Covered</strong>
                   <span style={{ color: '#9e9e9e' }}> &mdash; DLP actively monitors and/or blocks this data type on this channel</span>
                 </div>
               </div>
               <div className="cov-legend-row">
-                <span className="cov-legend-dot" style={{ background: '#ffa726' }} />
+                <span className="cov-dot" style={{ background: '#ffa726', color: '#fff', flexShrink: 0 }}>{STATUS_LETTERS.partial}</span>
                 <div>
                   <strong style={{ color: '#ffa726' }}>Partial</strong>
-                  <span style={{ color: '#9e9e9e' }}> &mdash; Some coverage exists but may have gaps (e.g., monitor-only, limited patterns)</span>
+                  <span style={{ color: '#9e9e9e' }}> &mdash; Some coverage but may have gaps (e.g., monitor-only, limited patterns)</span>
                 </div>
               </div>
               <div className="cov-legend-row">
-                <span className="cov-legend-dot" style={{ background: '#ef5350' }} />
+                <span className="cov-dot" style={{ background: '#ef5350', color: '#fff', flexShrink: 0 }}>{STATUS_LETTERS.gap}</span>
                 <div>
                   <strong style={{ color: '#ef5350' }}>Gap</strong>
-                  <span style={{ color: '#9e9e9e' }}> &mdash; No DLP coverage for this data type on this channel — a risk that should be addressed</span>
+                  <span style={{ color: '#9e9e9e' }}> &mdash; No DLP coverage &mdash; a risk that needs to be addressed</span>
                 </div>
               </div>
               <div className="cov-legend-row">
-                <span className="cov-legend-dot" style={{ background: '#616161' }} />
+                <span className="cov-dot" style={{ background: '#616161', color: '#9e9e9e', flexShrink: 0 }}>{STATUS_LETTERS.na}</span>
                 <div>
                   <strong style={{ color: '#9e9e9e' }}>N/A</strong>
-                  <span style={{ color: '#9e9e9e' }}> &mdash; Not applicable to your environment (e.g., no FTP in use)</span>
+                  <span style={{ color: '#9e9e9e' }}> &mdash; Not applicable to your environment</span>
                 </div>
               </div>
             </div>
           </div>
           <div>
-            <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: 12 }}>Keyboard & Mouse</h3>
+            <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: 12 }}>Interactions</h3>
             <ul style={{ listStyle: 'disc', paddingLeft: 20, color: '#9e9e9e', fontSize: '0.875rem' }}>
-              <li style={{ marginBottom: 6 }}><strong style={{ color: '#b0bec5' }}>Click cell</strong> &mdash; cycle through statuses</li>
-              <li style={{ marginBottom: 6 }}><strong style={{ color: '#b0bec5' }}>Right-click column header</strong> &mdash; fill entire column as Covered</li>
-              <li style={{ marginBottom: 6 }}><strong style={{ color: '#b0bec5' }}>Right-click row label</strong> &mdash; fill entire row as Covered</li>
-              <li style={{ marginBottom: 6 }}><strong style={{ color: '#b0bec5' }}>Export Map</strong> &mdash; download full coverage data as JSON, including a summary of all gaps</li>
+              <li style={{ marginBottom: 8 }}><strong style={{ color: '#b0bec5' }}>Click cell</strong> &mdash; cycle through statuses</li>
+              <li style={{ marginBottom: 8 }}><strong style={{ color: '#b0bec5' }}>Right-click column header</strong> &mdash; fill entire column as Covered</li>
+              <li style={{ marginBottom: 8 }}><strong style={{ color: '#b0bec5' }}>Right-click row label</strong> &mdash; fill entire row as Covered</li>
+              <li style={{ marginBottom: 8 }}><strong style={{ color: '#b0bec5' }}>Hover</strong> &mdash; crosshair highlights the active row and column</li>
             </ul>
+
+            <h3 style={{ color: '#fff', fontSize: '1rem', margin: '20px 0 12px' }}>Use With</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Link href="/assessment" style={{ fontSize: '0.85rem' }}>DLP Security Assessment &rarr;</Link>
+              <Link href="/data-classifier" style={{ fontSize: '0.85rem' }}>Classification Tester &rarr;</Link>
+              <Link href="/sample-data" style={{ fontSize: '0.85rem' }}>Sample Data Downloads &rarr;</Link>
+            </div>
           </div>
         </div>
       </div>
