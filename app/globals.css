@@ -418,6 +418,10 @@ select.form-control { cursor: pointer; }
     text-align: center;
 }
 .footer-bottom p { color: #424242; font-size: 0.8rem; }
+.footer-legal-links { margin-top: 8px; }
+.footer-legal-links a { color: #616161; font-size: 0.8rem; }
+.footer-legal-links a:hover { color: #4fc3f7; }
+.footer-sep { color: #424242; margin: 0 8px; }
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
