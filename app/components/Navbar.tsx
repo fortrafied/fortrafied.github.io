@@ -118,6 +118,11 @@ export default function Navbar() {
               FAQ
             </Link>
           </li>
+          <li>
+            <Link href="/about" onClick={() => setMobileOpen(false)}>
+              About
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>

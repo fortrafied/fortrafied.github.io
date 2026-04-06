@@ -30,6 +30,7 @@ export default function Footer() {
               <li><Link href="/data-classifier">Classification Tester</Link></li>
               <li><Link href="/hash-generator">File Hash Generator</Link></li>
               <li><Link href="/faq">FAQ</Link></li>
+              <li><Link href="/about">About & Contact</Link></li>
             </ul>
           </div>
         </div>

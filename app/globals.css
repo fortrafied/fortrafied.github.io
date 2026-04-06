@@ -448,7 +448,67 @@ select.form-control { cursor: pointer; }
     .card-grid { grid-template-columns: 1fr; }
     .steps-grid { grid-template-columns: 1fr; }
     .data-types-grid { grid-template-columns: 1fr; }
+    .about-layout { grid-template-columns: 1fr; }
 }
+
+/* ===== About Page ===== */
+.about-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 32px;
+    align-items: start;
+}
+.about-card {
+    background: #111827;
+    border: 1px solid #1e2a45;
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 24px;
+}
+.about-profile {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #1e2a45;
+}
+.about-avatar {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, #1976d2, #4fc3f7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+.about-name { color: #fff; font-size: 1.4rem; margin-bottom: 4px; }
+.about-title { color: #4fc3f7; font-size: 0.95rem; margin-bottom: 2px; }
+.about-location { color: #757575; font-size: 0.85rem; }
+.about-section { margin-bottom: 28px; }
+.about-section:last-child { margin-bottom: 0; }
+.about-section h3 { color: #fff; font-size: 1.1rem; margin-bottom: 12px; }
+.about-section p { color: #9e9e9e; font-size: 0.9rem; line-height: 1.7; margin-bottom: 12px; }
+.about-section p:last-child { margin-bottom: 0; }
+.about-certs { display: flex; flex-wrap: wrap; gap: 8px; }
+.about-publications { list-style: disc; padding-left: 20px; }
+.about-publications li { color: #b0bec5; font-size: 0.9rem; margin-bottom: 6px; }
+.about-sidebar h3 { color: #fff; font-size: 1.1rem; margin-bottom: 12px; }
+.about-meta { display: flex; flex-direction: column; gap: 12px; }
+.about-meta li {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #1a2035;
+    color: #b0bec5;
+}
+.about-meta li:last-child { border-bottom: none; padding-bottom: 0; }
+.about-meta-label { color: #757575; }
 
 /* ===== Utility ===== */
 .mt-2 { margin-top: 16px; }
