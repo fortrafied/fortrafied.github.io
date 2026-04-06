@@ -93,18 +93,6 @@ export default function Home() {
               </p>
               <Link href="/data-classifier" className="btn btn-outline">Open Tool</Link>
             </div>
-            <div className="card card-disabled">
-              <div className="card-icon">&#128202;</div>
-              <h3>
-                DP Solution Composer{' '}
-                <span className="coming-soon-badge">Coming Soon</span>
-              </h3>
-              <p>
-                Toggle data protection products and features to see live coverage
-                across channels and data types.
-              </p>
-              <span className="btn btn-outline btn-disabled">Coming Soon</span>
-            </div>
             <div className="card">
               <div className="card-icon">#</div>
               <h3>File Hash Generator</h3>
