@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { downloadJSON, copyJSON } from '../lib/export-utils';
 
 interface Preset {
   pattern: string;
@@ -206,6 +207,42 @@ export default function RegexTesterClient() {
             />
           </div>
         </div>
+
+        {matches.length > 0 && (
+          <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ color: '#757575', fontSize: '0.85rem', marginRight: 8 }}>Export:</span>
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => {
+                const exportData = {
+                  timestamp: new Date().toISOString(),
+                  pattern,
+                  flags: `${flagGlobal ? 'g' : ''}${flagCase ? 'i' : ''}${flagMultiline ? 'm' : ''}`,
+                  matchCount: matches.length,
+                  matches: matches.map(m => ({ value: m.match, index: m.index })),
+                };
+                copyJSON(exportData);
+              }}
+            >
+              Copy JSON
+            </button>
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => {
+                const exportData = {
+                  timestamp: new Date().toISOString(),
+                  pattern,
+                  flags: `${flagGlobal ? 'g' : ''}${flagCase ? 'i' : ''}${flagMultiline ? 'm' : ''}`,
+                  matchCount: matches.length,
+                  matches: matches.map(m => ({ value: m.match, index: m.index })),
+                };
+                downloadJSON(exportData, `regex-results-${Date.now()}.json`);
+              }}
+            >
+              Download JSON
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Reference Table */}

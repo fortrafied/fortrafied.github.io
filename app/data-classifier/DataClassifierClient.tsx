@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { downloadJSON, downloadCSV, copyJSON } from '../lib/export-utils';
 import {
   type ClassifierDef,
   sevOrder,
@@ -456,6 +457,47 @@ export default function DataClassifierClient() {
                     <span style={{ color: '#9e9e9e', marginLeft: 8 }}>{count} match{count !== 1 ? 'es' : ''}</span>
                   </div>
                 ))}
+              </div>
+
+              {/* Export */}
+              <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #1e2a45', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ color: '#757575', fontSize: '0.85rem', marginRight: 8 }}>Export Results:</span>
+                <button
+                  className="btn btn-outline btn-sm"
+                  onClick={() => {
+                    const exportData = {
+                      timestamp: new Date().toISOString(),
+                      summary: { totalMatches, dataTypesFound: results.length, highestSeverity: maxSeverity, categories },
+                      findings: results.map(r => ({ name: r.name, category: r.category, severity: r.severity, matchCount: r.count, sampleMatches: r.matches.slice(0, 5) })),
+                    };
+                    copyJSON(exportData);
+                  }}
+                >
+                  Copy JSON
+                </button>
+                <button
+                  className="btn btn-outline btn-sm"
+                  onClick={() => {
+                    const exportData = {
+                      timestamp: new Date().toISOString(),
+                      summary: { totalMatches, dataTypesFound: results.length, highestSeverity: maxSeverity, categories },
+                      findings: results.map(r => ({ name: r.name, category: r.category, severity: r.severity, matchCount: r.count, matches: r.matches })),
+                    };
+                    downloadJSON(exportData, `classification-results-${Date.now()}.json`);
+                  }}
+                >
+                  Download JSON
+                </button>
+                <button
+                  className="btn btn-outline btn-sm"
+                  onClick={() => {
+                    const headers = ['Data Type', 'Category', 'Severity', 'Match Count', 'Sample Matches'];
+                    const rows = results.map(r => [r.name, r.category, r.severity, String(r.count), r.matches.slice(0, 5).join('; ')]);
+                    downloadCSV(headers, rows, `classification-results-${Date.now()}.csv`);
+                  }}
+                >
+                  Download CSV
+                </button>
               </div>
             </>
           )}

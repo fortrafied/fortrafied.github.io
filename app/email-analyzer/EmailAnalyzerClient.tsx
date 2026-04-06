@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { downloadJSON, copyJSON } from '../lib/export-utils';
 import {
   type ParsedEmail,
   type EmailHop,
@@ -246,6 +247,44 @@ export default function EmailAnalyzerClient() {
                 {label}
               </button>
             ))}
+          </div>
+
+          {/* Export bar */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 }}>
+            <span style={{ color: '#757575', fontSize: '0.85rem', marginRight: 8 }}>Export Analysis:</span>
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => {
+                const exportData = {
+                  timestamp: new Date().toISOString(),
+                  summary: parsed.summary,
+                  authentication: parsed.authResults,
+                  routing: parsed.hops.map(h => ({ from: h.from, by: h.by, protocol: h.with, dateRaw: h.dateRaw, delay: h.delay })),
+                  securityHeaders: parsed.securityHeaders.map(h => ({ name: h.name, vendor: h.vendor, category: h.category, value: h.value })),
+                  classificationHeaders: parsed.classificationHeaders.map(h => ({ name: h.name, product: h.product, value: h.value })),
+                };
+                copyJSON(exportData);
+              }}
+            >
+              Copy JSON
+            </button>
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => {
+                const exportData = {
+                  timestamp: new Date().toISOString(),
+                  summary: parsed.summary,
+                  authentication: parsed.authResults,
+                  routing: parsed.hops.map(h => ({ from: h.from, by: h.by, protocol: h.with, dateRaw: h.dateRaw, delay: h.delay })),
+                  securityHeaders: parsed.securityHeaders.map(h => ({ name: h.name, vendor: h.vendor, category: h.category, value: h.value })),
+                  classificationHeaders: parsed.classificationHeaders.map(h => ({ name: h.name, product: h.product, value: h.value })),
+                  allHeaders: parsed.headers.map(h => ({ name: h.name, value: h.value })),
+                };
+                downloadJSON(exportData, `email-analysis-${Date.now()}.json`);
+              }}
+            >
+              Download JSON
+            </button>
           </div>
 
           {/* Summary tab */}

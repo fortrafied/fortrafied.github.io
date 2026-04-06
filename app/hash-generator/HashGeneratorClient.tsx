@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { downloadJSON, copyJSON } from '../lib/export-utils';
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return bytes + ' B';
@@ -213,6 +214,36 @@ export default function HashGeneratorClient() {
                 </tr>
               </tbody>
             </table>
+
+            <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ color: '#757575', fontSize: '0.85rem', marginRight: 8 }}>Export:</span>
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => {
+                  const exportData = {
+                    timestamp: new Date().toISOString(),
+                    file: { name: fileInfo!.name, size: fileInfo!.size, type: fileInfo!.type },
+                    hashes: fileHashes,
+                  };
+                  copyJSON(exportData);
+                }}
+              >
+                Copy JSON
+              </button>
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => {
+                  const exportData = {
+                    timestamp: new Date().toISOString(),
+                    file: { name: fileInfo!.name, size: fileInfo!.size, type: fileInfo!.type },
+                    hashes: fileHashes,
+                  };
+                  downloadJSON(exportData, `hashes-${fileInfo!.name}-${Date.now()}.json`);
+                }}
+              >
+                Download JSON
+              </button>
+            </div>
 
             <div className="form-group mt-3">
               <label htmlFor="compareHash">Compare Hash (paste expected hash to verify)</label>
