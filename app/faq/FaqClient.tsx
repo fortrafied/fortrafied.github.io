@@ -165,12 +165,15 @@ function FaqSection({ title, items, defaultOpen }: { title: string; items: FaqIt
         <div
           key={idx}
           className={`faq-item${openIndex === idx ? ' open' : ''}`}
-          onClick={() => toggle(idx)}
         >
-          <div className="faq-q">
+          <button
+            className="faq-q"
+            onClick={() => toggle(idx)}
+            aria-expanded={openIndex === idx}
+          >
             <span>{item.question}</span>
             <span className="faq-arrow">&#9662;</span>
-          </div>
+          </button>
           <div className="faq-a">{item.answer}</div>
         </div>
       ))}
@@ -181,15 +184,6 @@ function FaqSection({ title, items, defaultOpen }: { title: string; items: FaqIt
 export default function FaqClient() {
   return (
     <>
-      <style>{`
-        .faq-item { background: #111827; border: 1px solid #1e2a45; border-radius: 8px; margin-bottom: 12px; }
-        .faq-q { padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #fff; font-weight: 600; font-size: 0.95rem; }
-        .faq-q:hover { color: #4fc3f7; }
-        .faq-a { padding: 0 20px 16px; color: #9e9e9e; font-size: 0.9rem; display: none; line-height: 1.7; }
-        .faq-item.open .faq-a { display: block; }
-        .faq-item.open .faq-arrow { transform: rotate(180deg); }
-        .faq-arrow { transition: transform 0.2s; color: #4fc3f7; }
-      `}</style>
       <FaqSection title="About This Site" items={aboutItems} defaultOpen={0} />
       <FaqSection title="DLP Testing" items={dlpItems} />
     </>
