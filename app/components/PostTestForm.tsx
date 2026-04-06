@@ -173,6 +173,15 @@ export default function PostTestForm({ variant }: PostTestFormProps) {
 
   return (
     <main className="container section">
+      {/* How It Works */}
+      <div className="info-box">
+        <strong>How this test works:</strong> When you submit data below, your browser sends
+        a real {isHttp ? 'HTTP' : 'HTTPS'} POST request. Because Fortrafied is a static site with
+        no backend, the request will return a &ldquo;Connection Error&rdquo; &mdash; this is expected.
+        The purpose is to generate actual network traffic containing sensitive data so your DLP
+        solution can intercept and flag it. Check your DLP console for alerts after submitting.
+      </div>
+
       {/* Alert Box */}
       {isHttp ? (
         <div className="warning-box">
