@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import PageHeader from '../components/PageHeader';
 
 const tabData: Record<string, { label: string; content: string }> = {
@@ -127,7 +128,7 @@ export default function EmailTestClient() {
               <h4>Download Sample Data</h4>
               <p>
                 Copy the sample sensitive data from the tabs below or download sample files from the{' '}
-                <a href="/sample-data">Sample Data page</a>. These contain synthetic PII, PCI, and PHI data.
+                <Link href="/sample-data">Sample Data page</Link>. These contain synthetic PII, PCI, and PHI data.
               </p>
             </div>
             <div className="step">

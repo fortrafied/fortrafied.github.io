@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import PageHeader from '../components/PageHeader';
 
 const ftpConfig = `# FTP Server Connection Details
@@ -62,7 +63,7 @@ export default function FtpTestClient() {
               <h4>Download Sample Files</h4>
               <p>
                 Download sample files containing sensitive data from the{' '}
-                <a href="/sample-data">Sample Data page</a>. These files contain synthetic PII, PCI, and PHI data in various formats.
+                <Link href="/sample-data">Sample Data page</Link>. These files contain synthetic PII, PCI, and PHI data in various formats.
               </p>
             </div>
             <div className="step">
