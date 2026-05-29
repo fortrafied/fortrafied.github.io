@@ -33,7 +33,7 @@ app/
 │   └── PostTestForm.tsx            # Shared HTTP/HTTPS POST form (client)
 │
 ├── lib/
-│   ├── classifiers.ts              # 21 builtin classifiers + localStorage helpers
+│   ├── classifiers.ts              # builtin classifiers + localStorage helpers
 │   ├── email-parser.ts             # Email header & auth analysis (SPF/DKIM/DMARC)
 │   └── file-parser.ts              # Multi-format parser (DOCX/XLSX/PPTX/PDF/HTML/TXT)
 │
@@ -76,7 +76,7 @@ When adding new pages, use the existing CSS classes before creating new ones. Ch
 **Client-side only processing:** No fetch calls to external APIs for core functionality. File parsing, regex matching, hashing, and classification all happen in the browser via Web Crypto API, DOMParser, JSZip, and pdfjs-dist.
 
 **Classifier system** (`app/lib/classifiers.ts`):
-- 21 builtin classifiers covering PII, PCI, PHI, Financial, Network, and Credentials
+- builtin classifiers covering PII, PCI, PHI, Financial, Network, and Credentials
 - Custom classifiers stored in `localStorage` under key `fortrafied_custom_classifiers`
 - Two pattern types: `regex` and `dictionary` (newline-separated keywords converted to word-boundary regex)
 - Severity levels: Low, Medium, High, Critical
