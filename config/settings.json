@@ -1,0 +1,11 @@
+{
+  "siteTitle": "Fortrafied",
+  "brandSubtext": "Security Tools",
+  "featureMessages": {
+    "disabled": "This feature is currently disabled in the UI. It remains visible for reference but may not be fully active.",
+    "hidden": "This feature has been hidden and is not available through the app."
+  },
+  "featureDefaults": {
+    "status": "enabled"
+  }
+}

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { getFeatureStatus, isFeatureHidden } from '@/app/lib/feature-config';
+import { getFeatureById, navSections } from '@/app/lib/feature-registry';
 
 interface DropdownItem {
   label: string;
@@ -15,41 +17,24 @@ interface NavDropdown {
   items: DropdownItem[];
 }
 
-const dropdowns: NavDropdown[] = [
-  {
-    label: 'Data in Motion',
-    items: [
-      { label: 'HTTP POST Test', href: '/http-post' },
-      { label: 'HTTPS POST Test', href: '/https-post' },
-      { label: 'Email / SMTP Test', href: '/email-test' },
-      { label: 'FTP Upload Test', href: '/ftp-test' },
-    ],
-  },
-  {
-    label: 'Data in Use',
-    items: [
-      { label: 'Clipboard / Paste Test', href: '/clipboard-test' },
-      { label: 'Print / Screenshot Test', href: '/print-test' },
-    ],
-  },
-  {
-    label: 'Data at Rest',
-    items: [
-      { label: 'Sample Data Downloads', href: '/sample-data' },
-      { label: 'Classification Tester', href: '/data-classifier' },
-      { label: 'Classification Builder', href: '/classification-builder' },
-    ],
-  },
-  {
-    label: 'Tools',
-    items: [
-      { label: 'Regex Pattern Tester', href: '/regex-tester' },
-      { label: 'Email Header Analyzer', href: '/email-analyzer' },
-      { label: 'DLP Prompt Builder', href: '/prompt-builder' },
-      { label: 'File Hash Generator', href: '/hash-generator' },
-    ],
-  },
-];
+const dropdowns: NavDropdown[] = navSections
+  .map((section) => ({
+    label: section.label,
+    items: section.featureIds
+      .map((featureId) => getFeatureById(featureId))
+      .filter((feature): feature is NonNullable<typeof feature> => !!feature)
+      .filter((feature) => !isFeatureHidden(feature.id))
+      .map((feature) => {
+        const status = getFeatureStatus(feature.id);
+        return {
+          label: feature.label,
+          href: feature.href,
+          disabled: status === 'disabled',
+          disabledNote: status === 'disabled' ? 'disabled by configuration' : undefined,
+        };
+      }),
+  }))
+  .filter((section) => section.items.length > 0);
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
