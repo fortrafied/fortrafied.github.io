@@ -21,8 +21,11 @@ export interface FeaturesConfig {
   hidden: string[];
 }
 
-export const appSettings: AppSettings = settings;
-export const featureConfig: FeaturesConfig = features;
+const rawSettings = settings as unknown as AppSettings;
+const rawFeatures = features as unknown as FeaturesConfig;
+
+export const appSettings: AppSettings = rawSettings;
+export const featureConfig: FeaturesConfig = rawFeatures;
 
 export function getFeatureStatus(featureId: string): FeatureStatus {
   if (featureConfig.hidden.includes(featureId)) return 'hidden';
