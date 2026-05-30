@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { getFeatureByHref, getFeatureStatus } from '@/app/lib/feature-registry';
+import { getFeatureByHref } from '@/app/lib/feature-registry';
+import { getFeatureStatus } from '@/app/lib/feature-config';
 import { isFeatureHidden } from '@/app/lib/feature-config';
 
 export interface RelatedTool {
