@@ -1,28 +1,27 @@
 {
   "enabled": [
-    "http-post",
+    "email-analyzer",
     "https-post",
-    "ftp-test",
     "clipboard-test",
-    "print-test",
     "sample-data",
     "data-classifier",
     "classification-builder",
-    "regex-tester",
     "hash-generator",
-    "assessment",
-    "coverage-map",
     "faq",
     "about",
     "privacy",
     "terms"
   ],
-  "disabled": [
-    "email-analyzer",
-    "email-test",
-    "prompt-builder"
-  ],
+  "disabled": [],
   "hidden": [
-    "dp-solution"
+    "prompt-builder",
+    "email-test",
+    "http-post",
+    "regex-tester",
+    "print-test",
+    "ftp-test",
+    "dp-solution",
+    "assessment",
+    "coverage-map"
   ]
 }
