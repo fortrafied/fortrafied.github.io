@@ -96,11 +96,6 @@ export default function Navbar() {
             </li>
           ))}
           <li>
-            <Link href="/coverage-map" onClick={() => setMobileOpen(false)}>
-              Coverage Map
-            </Link>
-          </li>
-          <li>
             <Link href="/faq" onClick={() => setMobileOpen(false)}>
               FAQ
             </Link>
