@@ -19,13 +19,15 @@ export const featureDefinitions: FeatureDefinition[] = [
   { id: 'email-analyzer', label: 'Email Header Analyzer', href: '/email-analyzer', section: 'Tools' },
   { id: 'prompt-builder', label: 'DLP Prompt Builder', href: '/prompt-builder', section: 'Tools' },
   { id: 'hash-generator', label: 'File Hash Generator', href: '/hash-generator', section: 'Tools' },
+  { id: 'assessment', label: 'Assessment', href: '/assessment', section: 'Tools' },
+  { id: 'coverage-map', label: 'Coverage Map', href: '/coverage-map', section: 'Tools' },
 ];
 
 export const navSections = [
   { label: 'Data in Motion', featureIds: ['http-post', 'https-post', 'email-test', 'ftp-test'] },
   { label: 'Data in Use', featureIds: ['clipboard-test', 'print-test'] },
   { label: 'Data at Rest', featureIds: ['sample-data', 'data-classifier', 'classification-builder'] },
-  { label: 'Tools', featureIds: ['regex-tester', 'email-analyzer', 'prompt-builder', 'hash-generator'] },
+  { label: 'Tools', featureIds: ['regex-tester', 'email-analyzer', 'prompt-builder', 'hash-generator', 'assessment', 'coverage-map'] },
 ];
 
 export function getFeatureById(featureId: string): FeatureDefinition | undefined {
