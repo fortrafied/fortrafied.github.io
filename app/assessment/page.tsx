@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import PageHeader from '../components/PageHeader';
+import FeatureGuard from '../components/FeatureGuard';
 import AssessmentClient from './AssessmentClient';
 
 export const metadata: Metadata = {
@@ -10,13 +11,13 @@ export const metadata: Metadata = {
 export default function AssessmentPage() {
   return (
     <>
-      <PageHeader
+      <FeatureGuard
+        featureId="assessment"
         title="DLP Security Assessment"
         description="A structured, self-led guide for evaluating your DLP deployment across every protection vector."
-      />
-      <main className="container section">
+      >
         <AssessmentClient />
-      </main>
+      </FeatureGuard>
     </>
   );
 }

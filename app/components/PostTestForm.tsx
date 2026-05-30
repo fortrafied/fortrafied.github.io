@@ -2,6 +2,8 @@
 
 import { useState, useRef, DragEvent, FormEvent, ChangeEvent } from 'react';
 import Link from 'next/link';
+import { getFeatureByHref } from '@/app/lib/feature-registry';
+import { getFeatureStatus, isFeatureHidden } from '@/app/lib/feature-config';
 
 const presets: Record<string, string> = {
   ssn: "Name: John A. Smith\nSSN: 078-05-1120\nDate of Birth: 01/15/1985\n\nName: Jane B. Doe\nSSN: 219-09-9999\nDate of Birth: 03/22/1990\n\nName: Robert C. Johnson\nSSN: 323-45-6789\nDate of Birth: 07/04/1978",
@@ -427,21 +429,58 @@ export default function PostTestForm({ variant }: PostTestFormProps) {
       <div className="test-panel">
         <h2>Related Tools</h2>
         <div className="card-grid" style={{ marginTop: 16 }}>
-          <Link href="/sample-data" className="related-tool-card">
-            <span className="related-tool-label">Sample Data Downloads</span>
-            <span className="related-tool-desc">Generate synthetic sensitive data files to use as test payloads.</span>
-            <span className="related-tool-arrow">&rarr;</span>
-          </Link>
-          <Link href={isHttp ? '/https-post' : '/http-post'} className="related-tool-card">
-            <span className="related-tool-label">{isHttp ? 'HTTPS POST Test' : 'HTTP POST Test'}</span>
-            <span className="related-tool-desc">{isHttp ? 'Test with encrypted HTTPS traffic to validate SSL inspection.' : 'Test with plaintext HTTP traffic for baseline DLP detection.'}</span>
-            <span className="related-tool-arrow">&rarr;</span>
-          </Link>
-          <Link href="/email-test" className="related-tool-card">
-            <span className="related-tool-label">Email / SMTP Test</span>
-            <span className="related-tool-desc">Test email-based exfiltration detection with SMTP protocol.</span>
-            <span className="related-tool-arrow">&rarr;</span>
-          </Link>
+          {[
+            {
+              href: '/sample-data',
+              label: 'Sample Data Downloads',
+              description: 'Generate synthetic sensitive data files to use as test payloads.',
+            },
+            {
+              href: isHttp ? '/https-post' : '/http-post',
+              label: isHttp ? 'HTTPS POST Test' : 'HTTP POST Test',
+              description: isHttp
+                ? 'Test with encrypted HTTPS traffic to validate SSL inspection.'
+                : 'Test with plaintext HTTP traffic for baseline DLP detection.',
+            },
+            {
+              href: '/email-test',
+              label: 'Email / SMTP Test',
+              description: 'Test email-based exfiltration detection with SMTP protocol.',
+            },
+          ]
+            .filter((tool) => {
+              const feature = getFeatureByHref(tool.href);
+              return !feature || !isFeatureHidden(feature.id);
+            })
+            .map((tool) => {
+              const feature = getFeatureByHref(tool.href);
+              const status = feature ? getFeatureStatus(feature.id) : 'enabled';
+
+              if (status === 'disabled') {
+                return (
+                  <div
+                    key={tool.href}
+                    className="related-tool-card"
+                    style={{ opacity: 0.5, pointerEvents: 'none' }}
+                  >
+                    <span className="related-tool-label">{tool.label}</span>
+                    <span className="related-tool-desc">{tool.description}</span>
+                    <span className="related-tool-arrow">&rarr;</span>
+                    <div style={{ marginTop: 12, fontSize: '0.85rem', color: '#9e9e9e' }}>
+                      Disabled by configuration
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <Link key={tool.href} href={tool.href} className="related-tool-card">
+                  <span className="related-tool-label">{tool.label}</span>
+                  <span className="related-tool-desc">{tool.description}</span>
+                  <span className="related-tool-arrow">&rarr;</span>
+                </Link>
+              );
+            })}
         </div>
       </div>
     </main>

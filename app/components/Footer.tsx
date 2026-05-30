@@ -1,6 +1,47 @@
 import Link from 'next/link';
+import type { FeatureDefinition } from '@/app/lib/feature-registry';
+import { getFeatureById } from '@/app/lib/feature-registry';
+import { getFeatureStatus, isFeatureHidden } from '@/app/lib/feature-config';
+
+const testingFeatureIds = [
+  'http-post',
+  'https-post',
+  'email-test',
+  'ftp-test',
+  'clipboard-test',
+  'print-test',
+];
+
+const resourceFeatureIds = ['sample-data', 'data-classifier', 'regex-tester', 'hash-generator'];
+
+const renderFooterLink = (feature: FeatureDefinition) => {
+  const status = getFeatureStatus(feature.id);
+  if (status === 'disabled') {
+    return (
+      <li key={feature.id}>
+        <span style={{ color: '#9e9e9e' }}>
+          {feature.label} (disabled by configuration)
+        </span>
+      </li>
+    );
+  }
+
+  return (
+    <li key={feature.id}>
+      <Link href={feature.href}>{feature.label}</Link>
+    </li>
+  );
+};
+
+const visibleFeatures = (ids: string[]) =>
+  ids
+    .map((id) => getFeatureById(id))
+    .filter((feature): feature is FeatureDefinition => Boolean(feature) && !isFeatureHidden(feature.id));
 
 export default function Footer() {
+  const visibleTesting = visibleFeatures(testingFeatureIds);
+  const visibleResources = visibleFeatures(resourceFeatureIds);
+
   return (
     <footer className="footer">
       <div className="container">
@@ -16,23 +57,19 @@ export default function Footer() {
           <div>
             <h4>Testing</h4>
             <ul>
-              <li><Link href="/http-post">HTTP POST</Link></li>
-              <li><Link href="/https-post">HTTPS POST</Link></li>
-              <li><Link href="/email-test">Email Test</Link></li>
-              <li><Link href="/ftp-test">FTP Test</Link></li>
-              <li><Link href="/clipboard-test">Clipboard Test</Link></li>
-              <li><Link href="/print-test">Print Test</Link></li>
+              {visibleTesting.map(renderFooterLink)}
             </ul>
           </div>
           <div>
             <h4>Resources</h4>
             <ul>
-              <li><Link href="/sample-data">Sample Data</Link></li>
-              <li><Link href="/data-classifier">Classification Tester</Link></li>
-              <li><Link href="/regex-tester">Regex Tester</Link></li>
-              <li><Link href="/hash-generator">Hash Generator</Link></li>
-              <li><Link href="/faq">FAQ</Link></li>
-              <li><Link href="/about">About &amp; Contact</Link></li>
+              {visibleResources.map(renderFooterLink)}
+              <li>
+                <Link href="/faq">FAQ</Link>
+              </li>
+              <li>
+                <Link href="/about">About &amp; Contact</Link>
+              </li>
             </ul>
           </div>
         </div>

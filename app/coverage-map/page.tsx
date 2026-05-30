@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import PageHeader from '../components/PageHeader';
+import FeatureGuard from '../components/FeatureGuard';
 import CoverageMapClient from './CoverageMapClient';
 
 export const metadata: Metadata = {
@@ -10,13 +11,13 @@ export const metadata: Metadata = {
 export default function CoverageMapPage() {
   return (
     <>
-      <PageHeader
+      <FeatureGuard
+        featureId="coverage-map"
         title="DLP Coverage Map"
         description="Visualize your DLP coverage across data types and channels. Click cells to mark coverage status and instantly identify gaps."
-      />
-      <main className="container section">
+      >
         <CoverageMapClient />
-      </main>
+      </FeatureGuard>
     </>
   );
 }

@@ -1,4 +1,68 @@
 import Link from 'next/link';
+import type { FeatureDefinition } from '../lib/feature-registry';
+import { getFeatureById, navSections } from '../lib/feature-registry';
+import { getFeatureStatus, isFeatureHidden } from '../lib/feature-config';
+
+const getVisibleSectionFeatures = (sectionLabel: string) => {
+  const section = navSections.find((section) => section.label === sectionLabel);
+  if (!section) return [];
+  return section.featureIds
+    .map((featureId) => getFeatureById(featureId))
+    .filter((feature): feature is FeatureDefinition => Boolean(feature))
+    .filter((feature) => !isFeatureHidden(feature.id));
+};
+
+const renderFeatureLink = (feature: FeatureDefinition) => {
+  const status = getFeatureStatus(feature.id);
+  if (status === 'disabled') {
+    return (
+      <li key={feature.id}>
+        <span style={{ color: '#9e9e9e' }}>
+          {feature.label} (disabled by configuration)
+        </span>
+      </li>
+    );
+  }
+
+  return (
+    <li key={feature.id}>
+      <Link href={feature.href}>{feature.label}</Link>
+    </li>
+  );
+};
+
+const toolsCards = [
+  {
+    id: 'regex-tester',
+    icon: '.*',
+    title: 'Regex Pattern Tester',
+    description:
+      'Test and validate DLP detection patterns against sample data. Includes common presets for SSN, credit cards, emails, and more.',
+  },
+  {
+    id: 'email-analyzer',
+    icon: '&#9993;',
+    title: 'Email Header Analyzer',
+    description:
+      'Analyze email headers for SPF, DKIM, and DMARC authentication results. Trace message routing and identify security issues.',
+  },
+  {
+    id: 'hash-generator',
+    icon: '#',
+    title: 'File Hash Generator',
+    description:
+      'Generate MD5, SHA-1, and SHA-256 hashes for files. Useful for exact data matching (EDM) and fingerprinting tests.',
+  },
+];
+
+const visibleTools = toolsCards
+  .map((card) => {
+    const feature = getFeatureById(card.id);
+    return feature && !isFeatureHidden(feature.id)
+      ? { ...card, href: feature.href, status: getFeatureStatus(feature.id) }
+      : null;
+  })
+  .filter((tool): tool is { id: string; icon: string; title: string; description: string; href: string; status: string } => Boolean(tool));
 
 export default function Home() {
   return (
@@ -36,10 +100,7 @@ export default function Home() {
                 data transmitted over the network via HTTP, HTTPS, FTP, and SMTP.
               </p>
               <ul className="card-links">
-                <li><Link href="/http-post">HTTP POST Test</Link></li>
-                <li><Link href="/https-post">HTTPS POST Test</Link></li>
-                <li><Link href="/email-test">Email / SMTP Test</Link></li>
-                <li><Link href="/ftp-test">FTP Upload Test</Link></li>
+                {getVisibleSectionFeatures('Data in Motion').map(renderFeatureLink)}
               </ul>
             </div>
             <div className="card">
@@ -50,8 +111,7 @@ export default function Home() {
                 copied, pasted, printed, or screen-captured on user workstations.
               </p>
               <ul className="card-links">
-                <li><Link href="/clipboard-test">Clipboard / Paste Test</Link></li>
-                <li><Link href="/print-test">Print / Screenshot Test</Link></li>
+                {getVisibleSectionFeatures('Data in Use').map(renderFeatureLink)}
               </ul>
             </div>
             <div className="card">
@@ -62,9 +122,7 @@ export default function Home() {
                 classify content to identify PII, PCI, PHI, and custom patterns.
               </p>
               <ul className="card-links">
-                <li><Link href="/sample-data">Sample Data Downloads</Link></li>
-                <li><Link href="/data-classifier">Classification Tester</Link></li>
-                <li><Link href="/classification-builder">Classification Builder</Link></li>
+                {getVisibleSectionFeatures('Data at Rest').map(renderFeatureLink)}
               </ul>
             </div>
           </div>
@@ -77,33 +135,16 @@ export default function Home() {
             Utilities for testing, validating, and configuring DLP solutions.
           </p>
           <div className="card-grid">
-            <div className="card">
-              <div className="card-icon">.*</div>
-              <h3>Regex Pattern Tester</h3>
-              <p>
-                Test and validate DLP detection patterns against sample data.
-                Includes common presets for SSN, credit cards, emails, and more.
-              </p>
-              <Link href="/regex-tester" className="btn btn-outline">Open Tool</Link>
-            </div>
-            <div className="card">
-              <div className="card-icon">&#9993;</div>
-              <h3>Email Header Analyzer</h3>
-              <p>
-                Analyze email headers for SPF, DKIM, and DMARC authentication
-                results. Trace message routing and identify security issues.
-              </p>
-              <Link href="/email-analyzer" className="btn btn-outline">Open Tool</Link>
-            </div>
-            <div className="card">
-              <div className="card-icon">#</div>
-              <h3>File Hash Generator</h3>
-              <p>
-                Generate MD5, SHA-1, and SHA-256 hashes for files. Useful for
-                exact data matching (EDM) and fingerprinting tests.
-              </p>
-              <Link href="/hash-generator" className="btn btn-outline">Open Tool</Link>
-            </div>
+            {visibleTools.map((tool) => (
+              <div key={tool.id} className="card" style={{ opacity: tool.status === 'disabled' ? 0.5 : 1 }}>
+                <div className="card-icon" dangerouslySetInnerHTML={{ __html: tool.icon }} />
+                <h3>{tool.title}</h3>
+                <p>{tool.description}</p>
+                <Link href={tool.href} className="btn btn-outline">
+                  Open Tool
+                </Link>
+              </div>
+            ))}
           </div>
         </section>
 
